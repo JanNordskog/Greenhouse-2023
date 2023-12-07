@@ -1,7 +1,7 @@
 package no.ntnu.run;
 
 import no.ntnu.controlpanel.CommunicationChannel;
-import no.ntnu.controlpanel.ControlPanelLogic;
+import no.ntnu.controlpanel.ControlPanelLogic1;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -14,14 +14,14 @@ import java.util.concurrent.Executors;
 
 public class SocketCommunicationChannel implements CommunicationChannel {
 
-    private final ControlPanelLogic logic;
+    private final ControlPanelLogic1 logic;
     private final ServerSocket serverSocket;
     private Socket clientSocket;
     private OutputStream outputStream;
 
     private ExecutorService executorService;
 
-    public SocketCommunicationChannel(ControlPanelLogic logic, int port) throws IOException {
+    public SocketCommunicationChannel(ControlPanelLogic1 logic, int port) throws IOException {
         this.logic = logic;
         this.serverSocket = new ServerSocket(port);
         this.executorService = Executors.newFixedThreadPool(2);

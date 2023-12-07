@@ -5,10 +5,6 @@ import no.ntnu.tools.Logger;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 
 /**
  * A fake communication channel. Emulates the node discovery (over the Internet).
@@ -17,7 +13,7 @@ import java.util.TimerTask;
  */
 public class FakeCommunicationChannel implements CommunicationChannel {
 
-  private final ControlPanelLogic logic;
+  private final no.ntnu.controlpanel.ControlPanelLogic1 logic;
 
   private Socket tcpSocket;
   private OutputStream outputStream;
@@ -27,7 +23,7 @@ public class FakeCommunicationChannel implements CommunicationChannel {
    *
    * @param logic The application logic of the control panel node.
    */
-  public FakeCommunicationChannel(ControlPanelLogic logic) {
+  public FakeCommunicationChannel(no.ntnu.controlpanel.ControlPanelLogic1 logic) {
     this.logic = logic;
   }
 

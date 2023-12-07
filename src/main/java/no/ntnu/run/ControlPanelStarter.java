@@ -1,81 +1,124 @@
 package no.ntnu.run;
 
 import no.ntnu.controlpanel.CommunicationChannel;
-import no.ntnu.controlpanel.ControlPanelLogic;
+import no.ntnu.controlpanel.ControlPanelLogic1;
 import no.ntnu.controlpanel.FakeCommunicationChannel;
 import no.ntnu.gui.controlpanel.ControlPanelApplication;
 import no.ntnu.tools.Logger;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.Socket;
 
-/**
- * Starter class for the control panel.
- * Note: we could launch the Application class directly, but then we would have issues with the
- * debugger (JavaFX modules not found)
- */
 public class ControlPanelStarter {
-  private final boolean fake;
+    private final boolean fake;
 
-  public ControlPanelStarter(boolean fake) {
-    this.fake = fake;
-  }
-
-  /**
-   * Entrypoint for the application.
-   *
-   * @param args Command line arguments, only the first one of them used: when it is "fake",
-   *             emulate fake events, when it is either something else or not present,
-   *             use real socket communication.
-   */
-  public static void main(String[] args) throws IOException {
-    boolean fake = false;
-    if (args.length == 1 && "fake".equals(args[0])) {
-      fake = true;
-      Logger.info("Using FAKE events");
+    public ControlPanelStarter(boolean fake) {
+        this.fake = fake;
     }
-    ControlPanelStarter starter = new ControlPanelStarter(fake);
-    starter.start();
-  }
 
-  private void start() throws IOException {
-    ControlPanelLogic logic = new ControlPanelLogic();
-    CommunicationChannel channel = initiateCommunication(logic, fake);
-    ControlPanelApplication.startApp(logic, channel);
-    // This code is reached only after the GUI-window is closed
-    Logger.info("Exiting the control panel application");
-    stopCommunication(channel);
-  }
-
-  private CommunicationChannel initiateCommunication(ControlPanelLogic logic, boolean fake) throws IOException {
-    CommunicationChannel channel;
-    if (fake) {
-      channel = initiateFakeSpawner(logic);
-    } else {
-      channel = initiateSocketCommunication(logic);
+    public static void main(String[] args) {
+        boolean fake = false;
+        if (args.length == 1 && "fake".equals(args[0])) {
+            fake = true;
+            Logger.info("Using FAKE events");
+        }
+        ControlPanelStarter starter = new ControlPanelStarter(fake);
+        starter.start();
     }
-    return channel;
-  }
 
-  private CommunicationChannel initiateSocketCommunication(ControlPanelLogic logic) throws IOException {
-    // Replace the following with your actual host and port configuration
-    String host = "localhost";
-    int port = 55000;
+    private void start() {
+        ControlPanelLogic1 logic = new ControlPanelLogic1();
+        CommunicationChannel channel = initiateCommunication(logic, fake);
+        ControlPanelApplication.startApp(logic, channel);
+        Logger.info("Exiting the control panel application");
+        stopCommunication(channel);
+    }
 
-    SocketCommunicationChannel socketChannel = new SocketCommunicationChannel(logic, port);
-    socketChannel.open(); // Open the socket connection
-    return socketChannel;
-  }
+    private CommunicationChannel initiateCommunication(ControlPanelLogic1 logic, boolean fake) {
+        CommunicationChannel channel;
+        if (fake) {
+            channel = initiateFakeSpawner(logic);
+        } else {
+            channel = initiateServerCommunication(logic);
+        }
+        return channel;
+    }
 
-  private CommunicationChannel initiateFakeSpawner(ControlPanelLogic logic) {
-    // Your existing fake spawner setup remains unchanged
-    FakeCommunicationChannel spawner = new FakeCommunicationChannel(logic);
-    logic.setCommunicationChannel(spawner);
-    final int START_DELAY = 5;
-    // ... (existing fake spawner setup)
-    return spawner;
-  }
+    private CommunicationChannel initiateServerCommunication(ControlPanelLogic1 logic) {
+        try {
+            String serverHost = "127.0.0.1"; // Replace with your server's host address or IP
+            int serverPort = 55001; // Replace with your server's port number
 
-  private void stopCommunication(CommunicationChannel channel) {
-    channel.close(); // Close the communication channel
-  }
+            Socket socket = new Socket(serverHost, serverPort);
+            BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+            ServerCommunicationChannel serverChannel = new ServerCommunicationChannel(logic, input);
+            serverChannel.open();
+            return serverChannel;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null; // Handle the error appropriately in your application
+        }
+    }
+
+    private CommunicationChannel initiateFakeSpawner(ControlPanelLogic1 logic) {
+        // ... (existing fake spawner setup)
+        // No changes needed here
+        return new FakeCommunicationChannel(logic);
+    }
+
+    private void stopCommunication(CommunicationChannel channel) {
+        channel.close();
+    }
+}
+
+// Additional class for ServerCommunicationChannel
+class ServerCommunicationChannel implements CommunicationChannel {
+
+    private final ControlPanelLogic1 logic;
+    private final BufferedReader input;
+
+    public ServerCommunicationChannel(ControlPanelLogic1 logic, BufferedReader input) {
+        this.logic = logic;
+        this.input = input;
+    }
+
+    @Override
+    public void sendActuatorChange(int nodeId, int actuatorId, boolean isOn) {
+        // Implement sending messages to server if needed
+    }
+
+    @Override
+    public boolean open() {
+        new Thread(this::listen).start();
+        return true;
+    }
+
+    private void listen() {
+        try {
+            String line;
+            while ((line = input.readLine()) != null) {
+                // Handle incoming data from server
+                processReceivedData(line);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void processReceivedData(String data) {
+        // Logic to process data received from server
+        System.out.println("Received data from server: " + data);
+    }
+
+    @Override
+    public void close() {
+        try {
+            input.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }

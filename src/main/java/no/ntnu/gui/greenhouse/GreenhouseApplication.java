@@ -28,7 +28,7 @@ public class GreenhouseApplication extends Application implements NodeStateListe
     mainStage.show();
     Logger.info("GUI subscribes to lifecycle events");
     simulator.initialize();
-    simulator.subscribeToLifecycleUpdates(this);
+   // simulator.subscribeToLifecycleUpdates(this);
     mainStage.setOnCloseRequest(event -> closeApplication());
     simulator.start();
   }

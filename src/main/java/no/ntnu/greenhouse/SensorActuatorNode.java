@@ -46,6 +46,42 @@ public class SensorActuatorNode implements ActuatorListener, CommunicationChanne
     this.running = false;
   }
 
+  /**
+   * Update the sensor readings of this node.
+   *
+   * @param newSensorReadings A list of new sensor readings.
+   */
+  public void updateSensorData(List<SensorReading> newSensorReadings) {
+    for (SensorReading newReading : newSensorReadings) {
+      Sensor sensor = findSensorByType(newReading.getType());
+      if (sensor != null) {
+        sensor.getReading().setValue(newReading.getValue());
+        // Optionally, you could also update the unit, if it's expected to change
+      } else {
+        // Log or handle the case where a sensor type is not found
+        Logger.error("Sensor type '" + newReading.getType() + "' not found on node " + id);
+      }
+    }
+
+    // Notify all sensor listeners about the update
+    notifySensorChanges();
+  }
+
+  /**
+   * Find a sensor by its type.
+   *
+   * @param type The type of sensor to find.
+   * @return The sensor if found, otherwise null.
+   */
+  private Sensor findSensorByType(String type) {
+    for (Sensor sensor : sensors) {
+      if (sensor.getType().equals(type)) {
+        return sensor;
+      }
+    }
+    return null;
+  }
+
   private void sendDataToServer(String data) {
     try (Socket socket = new Socket(serverAddress, serverPort);
          PrintWriter out = new PrintWriter(socket.getOutputStream(), true)) {
