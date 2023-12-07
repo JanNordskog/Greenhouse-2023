@@ -1,5 +1,8 @@
 package no.ntnu.greenhouse;
 
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.net.Socket;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
@@ -30,6 +33,28 @@ public class SensorActuatorNode implements ActuatorListener, CommunicationChanne
 
   private boolean running;
   private final Random random = new Random();
+
+
+  private String serverAddress;
+  private int serverPort;
+
+
+  public SensorActuatorNode(int id, String serverAddress, int serverPort) {
+    this.id = id;
+    this.serverAddress = serverAddress;
+    this.serverPort = serverPort;
+    this.running = false;
+  }
+
+  private void sendDataToServer(String data) {
+    try (Socket socket = new Socket(serverAddress, serverPort);
+         PrintWriter out = new PrintWriter(socket.getOutputStream(), true)) {
+      out.println(data);
+    } catch (IOException e) {
+      Logger.error("Error sending data to server: " + e.getMessage());
+      e.printStackTrace();
+    }
+  }
 
   /**
    * Create a sensor/actuator node. Note: the node itself does not check whether the ID is unique.
@@ -176,9 +201,21 @@ public class SensorActuatorNode implements ActuatorListener, CommunicationChanne
    */
   public void generateNewSensorValues() {
     Logger.infoNoNewline("Node #" + id);
+    String sensorData = convertSensorDataToString();
     addRandomNoiseToSensors();
     notifySensorChanges();
     debugPrint();
+    sendDataToServer(sensorData);
+  }
+
+  private String convertSensorDataToString() {
+    StringBuilder sb = new StringBuilder();
+    sb.append("Node #").append(id).append(": ");
+    for (Sensor sensor : sensors) {
+      sb.append(sensor.getReading().getFormatted()).append(" ");
+    }
+    // Add more details or format it as JSON/XML as per your requirement
+    return sb.toString();
   }
 
   private void addRandomNoiseToSensors() {

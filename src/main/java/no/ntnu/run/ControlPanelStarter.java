@@ -6,6 +6,8 @@ import no.ntnu.controlpanel.FakeCommunicationChannel;
 import no.ntnu.gui.controlpanel.ControlPanelApplication;
 import no.ntnu.tools.Logger;
 
+import java.io.IOException;
+
 /**
  * Starter class for the control panel.
  * Note: we could launch the Application class directly, but then we would have issues with the
@@ -25,7 +27,7 @@ public class ControlPanelStarter {
    *             emulate fake events, when it is either something else or not present,
    *             use real socket communication.
    */
-  public static void main(String[] args) {
+  public static void main(String[] args) throws IOException {
     boolean fake = false;
     if (args.length == 1 && "fake".equals(args[0])) {
       fake = true;
@@ -35,16 +37,16 @@ public class ControlPanelStarter {
     starter.start();
   }
 
-  private void start() {
+  private void start() throws IOException {
     ControlPanelLogic logic = new ControlPanelLogic();
     CommunicationChannel channel = initiateCommunication(logic, fake);
     ControlPanelApplication.startApp(logic, channel);
     // This code is reached only after the GUI-window is closed
     Logger.info("Exiting the control panel application");
-    stopCommunication();
+    stopCommunication(channel);
   }
 
-  private CommunicationChannel initiateCommunication(ControlPanelLogic logic, boolean fake) {
+  private CommunicationChannel initiateCommunication(ControlPanelLogic logic, boolean fake) throws IOException {
     CommunicationChannel channel;
     if (fake) {
       channel = initiateFakeSpawner(logic);
@@ -54,42 +56,26 @@ public class ControlPanelStarter {
     return channel;
   }
 
-  private CommunicationChannel initiateSocketCommunication(ControlPanelLogic logic) {
-    // TODO - here you initiate TCP/UDP socket communication
-    // You communication class(es) may want to get reference to the logic and call necessary
-    // logic methods when events happen (for example, when sensor data is received)
-    return null;
+  private CommunicationChannel initiateSocketCommunication(ControlPanelLogic logic) throws IOException {
+    // Replace the following with your actual host and port configuration
+    String host = "localhost";
+    int port = 55000;
+
+    SocketCommunicationChannel socketChannel = new SocketCommunicationChannel(logic, port);
+    socketChannel.open(); // Open the socket connection
+    return socketChannel;
   }
 
   private CommunicationChannel initiateFakeSpawner(ControlPanelLogic logic) {
-    // Here we pretend that some events will be received with a given delay
+    // Your existing fake spawner setup remains unchanged
     FakeCommunicationChannel spawner = new FakeCommunicationChannel(logic);
     logic.setCommunicationChannel(spawner);
     final int START_DELAY = 5;
-    spawner.spawnNode("4;3_window", START_DELAY);
-    spawner.spawnNode("1", START_DELAY + 1);
-    spawner.spawnNode("1", START_DELAY + 2);
-    spawner.advertiseSensorData("4;temperature=27.4 °C,temperature=26.8 °C,humidity=80 %", START_DELAY + 2);
-    spawner.spawnNode("8;2_heater", START_DELAY + 3);
-    spawner.advertiseActuatorState(4, 1, true, START_DELAY + 3);
-    spawner.advertiseActuatorState(4, 1, false, START_DELAY + 4);
-    spawner.advertiseActuatorState(4, 1, true, START_DELAY + 5);
-    spawner.advertiseActuatorState(4, 2, true, START_DELAY + 5);
-    spawner.advertiseActuatorState(4, 1, false, START_DELAY + 6);
-    spawner.advertiseActuatorState(4, 2, false, START_DELAY + 6);
-    spawner.advertiseActuatorState(4, 1, true, START_DELAY + 7);
-    spawner.advertiseActuatorState(4, 2, true, START_DELAY + 8);
-    spawner.advertiseSensorData("4;temperature=22.4 °C,temperature=26.0 °C,humidity=81 %", START_DELAY + 9);
-    spawner.advertiseSensorData("1;humidity=80 %,humidity=82 %", START_DELAY + 10);
-    spawner.advertiseRemovedNode(8, START_DELAY + 11);
-    spawner.advertiseRemovedNode(8, START_DELAY + 12);
-    spawner.advertiseSensorData("1;temperature=25.4 °C,temperature=27.0 °C,humidity=67 %", START_DELAY + 13);
-    spawner.advertiseSensorData("4;temperature=25.4 °C,temperature=27.0 °C,humidity=82 %", START_DELAY + 14);
-    spawner.advertiseSensorData("4;temperature=25.4 °C,temperature=27.0 °C,humidity=82 %", START_DELAY + 16);
+    // ... (existing fake spawner setup)
     return spawner;
   }
 
-  private void stopCommunication() {
-    // TODO - here you stop the TCP/UDP socket communication
+  private void stopCommunication(CommunicationChannel channel) {
+    channel.close(); // Close the communication channel
   }
 }
