@@ -8,6 +8,12 @@ import java.net.Socket;
 import no.ntnu.Command;
 import no.ntnu.Message;
 import no.ntnu.MessageSerializer;
+import no.ntnu.greenhouse.Actuator;
+import no.ntnu.greenhouse.Sensor;
+import no.ntnu.greenhouse.SensorActuatorNode;
+import no.ntnu.message.ActuatorMessage;
+import no.ntnu.message.HumidityMessage;
+import no.ntnu.message.TemperatureMessage;
 import no.ntnu.server.Server;
 
 public class ClientHandler extends Thread{
@@ -31,7 +37,24 @@ public class ClientHandler extends Thread{
             Command clientCommand = readClientRequest();
             if (clientCommand != null) {
                 System.out.println("Recieved a " + clientCommand.getClass().getSimpleName());
-                response = clientCommand.execute();
+                response = clientCommand.execute(server.getLogic());
+                if (response != null) {
+                    server.sendResponseToClients(response);
+                }
+                for (SensorActuatorNode san : server.getLogic().getNodes()) {
+                    for(Sensor s : san.getSensors()) {
+                        if (s.getType().equalsIgnoreCase("humidity")) {
+                            server.sendResponseToClients(new HumidityMessage(s.getReading().getValue(), san.getId()));
+                        } else if (s.getType().equalsIgnoreCase("temperature")) {
+                            server.sendResponseToClients(new TemperatureMessage(s.getReading().getValue(), san.getId()));
+                        }
+                    }
+
+                    for (Actuator a : san.getActuators()) {
+                        server.sendResponseToClients(new ActuatorMessage(a));
+                    }
+
+                }
             } else {
                 response = null;
             }
