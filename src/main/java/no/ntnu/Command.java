@@ -1,9 +1,9 @@
 package no.ntnu;
 
-import no.ntnu.greenhouse.SensorActuatorNode;
+import no.ntnu.server.ServerLogic;
 
 public abstract class Command implements Message {
 
-    public abstract Message execute(SensorActuatorNode node, int nodeId);
+    public abstract Message execute(ServerLogic logic);
     
 }
