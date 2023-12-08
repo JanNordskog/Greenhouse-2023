@@ -127,28 +127,121 @@ class ServerCommunicationChannel implements CommunicationChannel {
         return Integer.parseInt(nodeIdPart.trim());
     }
 
-    private List<SensorReading> extractSensorReadings(String data) {
+    public List<SensorReading> extractSensorReadings(String data) {
         List<SensorReading> readings = new ArrayList<>();
-        String sensorsData = data.substring(data.indexOf("\"sensors\":") + 10, data.indexOf("}]") + 1);
 
-        String[] sensors = sensorsData.split("\\},\\{");
-        for (String sensor : sensors) {
-            String type = extractValue(sensor, "\"type\":\"", "\"");
-            String valueStr = extractValue(sensor, "\"value\":", ",").replaceAll("[^0-9.]", ""); // Remove non-numeric characters
-            double value = Double.parseDouble(valueStr);
-            String unit = extractValue(sensor, "\"unit\":\"", "\"");
+        String sensorsData = data.substring(data.indexOf("\"sensors\":") + 10, data.lastIndexOf("}]") + 2);
 
-            readings.add(new SensorReading(type, value, unit));
+        while (!sensorsData.isEmpty() && sensorsData.contains("{") && sensorsData.contains("}")) {
+            // Splitting at the first occurrence of "},"
+            int splitIndex = sensorsData.indexOf("},");
+            String sensor;
+            if (splitIndex != -1) {
+                sensor = sensorsData.substring(1, splitIndex + 1);
+                sensorsData = sensorsData.substring(splitIndex + 2);
+            } else {
+                sensor = sensorsData.substring(1, sensorsData.length() - 1);
+                sensorsData = "";
+            }
+
+            // Extract and process sensor data
+            String type = removeFirstFourChars(extractValue(sensor, "type", "\","));
+            String valueStr = extractSensorValue(sensor, type);
+            if (!valueStr.isEmpty()) {
+                try {
+                    double value = Double.parseDouble(valueStr);
+                    String unit = removeFirstFourChars(extractValue(sensor, "unit", "\"}"));
+                    readings.add(new SensorReading(type, value, unit));
+                } catch (NumberFormatException e) {
+                    System.err.println("Invalid sensor value format: " + valueStr);
+                }
+            } else {
+                System.err.println("Sensor value not found for sensor: " + sensor);
+            }
         }
+
         return readings;
     }
 
 
+    private String extractSensorValue(String sensor, String type) {
+        String valueStr;
+        if (type.equals("temperature")) {
+            // Assuming temperature values end with 'C'
+            int valueEnd = sensor.indexOf("C");
+            if (valueEnd != -1) {
+                valueStr = sensor.substring(sensor.indexOf("\"value\":") + 8, valueEnd).trim();
+            } else {
+                // If 'C' not found, return empty string or log error
+                return "";
+            }
+        } else { // For humidity and other types
+            valueStr = extractValue(sensor, "\"value\":", ",").trim();
+        }
+        return valueStr.replaceAll("[^0-9.]", ""); // Remove non-numeric characters
+    }
+
     private String extractValue(String data, String startDelimiter, String endDelimiter) {
-        int start = data.indexOf(startDelimiter) + startDelimiter.length();
+        int start = data.indexOf(startDelimiter);
+        if (start == -1) {
+            return ""; // Start delimiter not found
+        }
+
+        start += startDelimiter.length(); // Move to the end of the start delimiter
+
         int end = data.indexOf(endDelimiter, start);
+        if (end == -1) {
+            return ""; // End delimiter not found after start
+        }
+
         return data.substring(start, end).trim();
     }
+
+
+
+
+
+    public static String removeFirstObject(String jsonString) {
+        // Find the index of the first opening and closing braces
+        int firstOpeningBrace = jsonString.indexOf('{');
+        int firstClosingBrace = jsonString.indexOf('}', firstOpeningBrace);
+
+        // Check if both braces are found
+        if (firstOpeningBrace == -1 || firstClosingBrace == -1) {
+            return jsonString; // Return original string if no object is found
+        }
+
+        // Build the new string
+        StringBuilder modifiedString = new StringBuilder();
+        modifiedString.append(jsonString.substring(0, firstOpeningBrace));
+
+        // Check and handle comma after the first object
+        if (firstClosingBrace + 1 < jsonString.length() && jsonString.charAt(firstClosingBrace + 1) == ',') {
+            firstClosingBrace++;
+        }
+
+        modifiedString.append(jsonString.substring(firstClosingBrace + 1));
+
+        return modifiedString.toString();
+    }
+
+    public static String removeFirstFourChars(String str) {
+        // Check if the string is null or its length is less than 4
+        if (str == null || str.length() <= 4) {
+            return "";
+        }
+
+        // Using StringBuilder to construct the new string
+        StringBuilder sb = new StringBuilder();
+        for (int i = 4; i < str.length(); i++) {
+            sb.append(str.charAt(i));
+        }
+        str =sb.toString();
+
+        return str;
+    }
+
+
 
     @Override
     public void close() {

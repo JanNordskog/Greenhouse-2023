@@ -19,6 +19,10 @@ public class NodeSimulation {
             Sensor temperatureSensor = new Sensor("temperature", 0, 50, 25, "C");
             node.addSensors(temperatureSensor, 1); // Adding one temperature sensor
 
+            Sensor humiditysensor = new Sensor("humidity", 25, 70, 50, "%");
+            node.addSensors(humiditysensor, 1); // Adding one temperature sensor
+
+
             // Configure the node with actuators
             // Example: Adding a heating actuator to each node
             Actuator heatingActuator = new Actuator("heater", i);
