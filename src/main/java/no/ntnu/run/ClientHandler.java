@@ -1,50 +1,65 @@
 package no.ntnu.run;
 
-import static no.ntnu.greenhouse.NodeServer.PORT_NUMBER;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
-import no.ntnu.listeners.common.ActuatorListener;
-import no.ntnu.listeners.greenhouse.SensorListener;
-import no.ntnu.ssl.SslConnection;
+import no.ntnu.Command;
+import no.ntnu.Message;
+import no.ntnu.MessageSerializer;
+import no.ntnu.server.Server;
 
-public class ClientHandler {
-    private static String SERVER_HOST;
+public class ClientHandler extends Thread{
     private Socket socket;
+    private final Server server;
     private PrintWriter socketWriter;
     private BufferedReader socketReader;
 
-    public ClientHandler(String host) {
-        SERVER_HOST = host;
+    public ClientHandler(Socket socket, Server server) throws IOException {
+        this.server = server;
+        this.socket = socket;
+        this.socketReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        this.socketWriter = new PrintWriter(socket.getOutputStream(), true);
     }
 
-    public boolean start() throws KeyStoreException, KeyManagementException, NoSuchAlgorithmException, CertificateException {
-        boolean connected = false;
+    @Override
+    public void run() {
+        Message response;
 
+        do {
+            Command clientCommand = readClientRequest();
+            if (clientCommand != null) {
+                System.out.println("Recieved a " + clientCommand.getClass().getSimpleName());
+                response = clientCommand.execute();
+            } else {
+                response = null;
+            }
+
+        } while (response != null);
+            System.out.println("Client " + socket.getRemoteSocketAddress() + " Disconnected");
+            server.clientDisconnected(this);
+    }
+
+    public Command readClientRequest() {
+        Message clientCommand = null;
         try {
-            SslConnection connection = new SslConnection(PORT_NUMBER);
-
-            socket = connection.client(SERVER_HOST);
-            socketWriter = new PrintWriter(socket.getOutputStream(), true);
-            socketReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            connected = true;
+            String clientRequest = socketReader.readLine();
+            clientCommand = MessageSerializer.fromString(clientRequest);
+            if (!(clientCommand instanceof Command) || clientCommand != null) {
+                System.err.println("Wrong message from client: " + clientCommand);
+                clientCommand = null;
+            }
         } catch (IOException e) {
-            System.err.println("Could not connect to server: " + e);
+            System.err.println("Could not recieve client request: " + e.getMessage());
         }
 
-        return connected;
+        return (Command) clientCommand;
     }
 
-    public void startListeningThread(SensorListener sensorListener, ActuatorListener actuatorListener) {
-        new Thread(() -> {
-            
-        });
+    public void sendToClient(Message message) {
+        socketWriter.println(MessageSerializer.toString(message));
     }
+
+
 }
