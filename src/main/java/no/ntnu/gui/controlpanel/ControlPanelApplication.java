@@ -15,6 +15,7 @@ import javafx.stage.Stage;
 import no.ntnu.controlpanel.CommunicationChannel;
 import no.ntnu.controlpanel.SensorActuatorNodeInfo;
 import no.ntnu.greenhouse.Actuator;
+import no.ntnu.greenhouse.ActuatorCollection;
 import no.ntnu.greenhouse.SensorReading;
 import no.ntnu.gui.common.ActuatorPane;
 import no.ntnu.gui.common.SensorPane;
@@ -114,13 +115,23 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
   @Override
   public void onSensorData(int nodeId, List<SensorReading> sensors) {
     Logger.info("Sensor data from node " + nodeId);
-    SensorPane sensorPane = sensorPanes.get(nodeId);
-    if (sensorPane != null) {
-      sensorPane.update(sensors);
-    } else {
-      Logger.error("No sensor section for node " + nodeId);
-    }
+    Platform.runLater(() -> {
+      if (!sensorPanes.containsKey(nodeId)) {
+        // Create a new tab for the node with just the nodeId
+        SensorActuatorNodeInfo newNodeInfo = new SensorActuatorNodeInfo(nodeId);
+        addNodeTab(newNodeInfo);
+      }
+
+      SensorPane sensorPane = sensorPanes.get(nodeId);
+      if (sensorPane != null) {
+        sensorPane.update(sensors);
+      } else {
+        Logger.error("No sensor section for node " + nodeId);
+      }
+    });
   }
+
+
 
   @Override
   public void onActuatorStateChanged(int nodeId, int actuatorId, boolean isOn) {

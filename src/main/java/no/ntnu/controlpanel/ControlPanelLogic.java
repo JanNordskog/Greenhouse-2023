@@ -45,6 +45,19 @@ public class ControlPanelLogic implements GreenhouseEventListener, ActuatorListe
   }
 
   /**
+   * Update the sensor data for a specific node.
+   * This method will be called when new sensor data is received.
+   *
+   * @param nodeId The ID of the node which has new sensor data.
+   * @param sensorReadings The new sensor readings.
+   */
+  public void updateSensorData(int nodeId, List<SensorReading> sensorReadings) {
+    // Notify all listeners about the new sensor data
+    listeners.forEach(listener -> listener.onSensorData(nodeId, sensorReadings));
+  }
+
+
+  /**
    * Add an event listener.
    *
    * @param listener The listener who will be notified on all events

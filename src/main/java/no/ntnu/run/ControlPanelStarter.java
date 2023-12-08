@@ -3,6 +3,7 @@ package no.ntnu.run;
 import no.ntnu.controlpanel.CommunicationChannel;
 import no.ntnu.controlpanel.ControlPanelLogic;
 import no.ntnu.controlpanel.FakeCommunicationChannel;
+import no.ntnu.greenhouse.SensorReading;
 import no.ntnu.gui.controlpanel.ControlPanelApplication;
 import no.ntnu.tools.Logger;
 
@@ -10,6 +11,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ControlPanelStarter {
     private final boolean fake;
@@ -109,8 +112,42 @@ class ServerCommunicationChannel implements CommunicationChannel {
     }
 
     private void processReceivedData(String data) {
-        // Logic to process data received from server
-        System.out.println("Received data from server: " + data);
+        try {
+            int nodeId = extractNodeId(data);
+            List<SensorReading> sensorReadings = extractSensorReadings(data);
+            logic.updateSensorData(nodeId, sensorReadings);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private int extractNodeId(String data) {
+        // Extracting nodeId from the data string
+        String nodeIdPart = data.substring(data.indexOf("\"nodeId\":") + 9, data.indexOf(","));
+        return Integer.parseInt(nodeIdPart.trim());
+    }
+
+    private List<SensorReading> extractSensorReadings(String data) {
+        List<SensorReading> readings = new ArrayList<>();
+        String sensorsData = data.substring(data.indexOf("\"sensors\":") + 10, data.indexOf("}]") + 1);
+
+        String[] sensors = sensorsData.split("\\},\\{");
+        for (String sensor : sensors) {
+            String type = extractValue(sensor, "\"type\":\"", "\"");
+            String valueStr = extractValue(sensor, "\"value\":", ",").replaceAll("[^0-9.]", ""); // Remove non-numeric characters
+            double value = Double.parseDouble(valueStr);
+            String unit = extractValue(sensor, "\"unit\":\"", "\"");
+
+            readings.add(new SensorReading(type, value, unit));
+        }
+        return readings;
+    }
+
+
+    private String extractValue(String data, String startDelimiter, String endDelimiter) {
+        int start = data.indexOf(startDelimiter) + startDelimiter.length();
+        int end = data.indexOf(endDelimiter, start);
+        return data.substring(start, end).trim();
     }
 
     @Override
