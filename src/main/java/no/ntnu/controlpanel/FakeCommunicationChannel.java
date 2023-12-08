@@ -13,7 +13,7 @@ import java.net.Socket;
  */
 public class FakeCommunicationChannel implements CommunicationChannel {
 
-  private final no.ntnu.controlpanel.ControlPanelLogic1 logic;
+  private final no.ntnu.controlpanel.ControlPanelLogic logic;
 
   private Socket tcpSocket;
   private OutputStream outputStream;
@@ -23,7 +23,7 @@ public class FakeCommunicationChannel implements CommunicationChannel {
    *
    * @param logic The application logic of the control panel node.
    */
-  public FakeCommunicationChannel(no.ntnu.controlpanel.ControlPanelLogic1 logic) {
+  public FakeCommunicationChannel(no.ntnu.controlpanel.ControlPanelLogic logic) {
     this.logic = logic;
   }
 

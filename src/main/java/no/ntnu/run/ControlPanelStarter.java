@@ -1,7 +1,7 @@
 package no.ntnu.run;
 
 import no.ntnu.controlpanel.CommunicationChannel;
-import no.ntnu.controlpanel.ControlPanelLogic1;
+import no.ntnu.controlpanel.ControlPanelLogic;
 import no.ntnu.controlpanel.FakeCommunicationChannel;
 import no.ntnu.gui.controlpanel.ControlPanelApplication;
 import no.ntnu.tools.Logger;
@@ -29,14 +29,14 @@ public class ControlPanelStarter {
     }
 
     private void start() {
-        ControlPanelLogic1 logic = new ControlPanelLogic1();
+        ControlPanelLogic logic = new ControlPanelLogic();
         CommunicationChannel channel = initiateCommunication(logic, fake);
         ControlPanelApplication.startApp(logic, channel);
         Logger.info("Exiting the control panel application");
         stopCommunication(channel);
     }
 
-    private CommunicationChannel initiateCommunication(ControlPanelLogic1 logic, boolean fake) {
+    private CommunicationChannel initiateCommunication(ControlPanelLogic logic, boolean fake) {
         CommunicationChannel channel;
         if (fake) {
             channel = initiateFakeSpawner(logic);
@@ -46,7 +46,7 @@ public class ControlPanelStarter {
         return channel;
     }
 
-    private CommunicationChannel initiateServerCommunication(ControlPanelLogic1 logic) {
+    private CommunicationChannel initiateServerCommunication(ControlPanelLogic logic) {
         try {
             String serverHost = "127.0.0.1"; // Replace with your server's host address or IP
             int serverPort = 55001; // Replace with your server's port number
@@ -63,7 +63,7 @@ public class ControlPanelStarter {
         }
     }
 
-    private CommunicationChannel initiateFakeSpawner(ControlPanelLogic1 logic) {
+    private CommunicationChannel initiateFakeSpawner(ControlPanelLogic logic) {
         // ... (existing fake spawner setup)
         // No changes needed here
         return new FakeCommunicationChannel(logic);
@@ -77,10 +77,10 @@ public class ControlPanelStarter {
 // Additional class for ServerCommunicationChannel
 class ServerCommunicationChannel implements CommunicationChannel {
 
-    private final ControlPanelLogic1 logic;
+    private final ControlPanelLogic logic;
     private final BufferedReader input;
 
-    public ServerCommunicationChannel(ControlPanelLogic1 logic, BufferedReader input) {
+    public ServerCommunicationChannel(ControlPanelLogic logic, BufferedReader input) {
         this.logic = logic;
         this.input = input;
     }
