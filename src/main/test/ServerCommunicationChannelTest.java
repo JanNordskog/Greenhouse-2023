@@ -34,6 +34,8 @@ class ServerCommunicationChannelTest {
         assertEquals("C", temperatureReading.getUnit());
     }
 
+
+
     @Test
     public void testRemoveFirstObject() {
         String originalJson = "[{\"type\": \"humidity\", \"value\": 25.55, \"unit\": \"%\"}, {\"type\": \"temperature\", \"value\": 22.5, \"unit\": \"C\"}]";
