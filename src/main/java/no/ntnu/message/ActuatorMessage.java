@@ -10,10 +10,6 @@ public class ActuatorMessage implements Message {
         this.actuator = actuator;
     }
 
-    public void toggle() {
-        this.actuator.toggle();
-    }
-
     public boolean isOn() {
         return this.actuator.isOn();
     }

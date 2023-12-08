@@ -38,7 +38,7 @@ public class Server {
                 ClientHandler clientHandler = acceptNextClientConnection(server);
                 if (clientHandler != null) {
                     connectedClients.add(clientHandler);
-                    clientHandler.start();
+                    clientHandler.run();
                 }
             }
         }
@@ -72,6 +72,12 @@ public class Server {
 
     public List<ClientHandler> getConnectedClients() {
         return this.connectedClients;
+    }
+
+    public static void main(String[] args) throws UnrecoverableKeyException, KeyManagementException, KeyStoreException, NoSuchAlgorithmException, CertificateException, FileNotFoundException, IOException {
+        ServerLogic logic = new ServerLogic();
+        Server server = new Server(logic);
+        server.startServer();
     }
 
 }

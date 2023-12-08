@@ -41,22 +41,22 @@ public class ClientHandler extends Thread{
                 if (response != null) {
                     server.sendResponseToClients(response);
                 }
-                for (SensorActuatorNode san : server.getLogic().getNodes()) {
-                    for(Sensor s : san.getSensors()) {
-                        if (s.getType().equalsIgnoreCase("humidity")) {
-                            server.sendResponseToClients(new HumidityMessage(s.getReading().getValue(), san.getId()));
-                        } else if (s.getType().equalsIgnoreCase("temperature")) {
-                            server.sendResponseToClients(new TemperatureMessage(s.getReading().getValue(), san.getId()));
-                        }
-                    }
-
-                    for (Actuator a : san.getActuators()) {
-                        server.sendResponseToClients(new ActuatorMessage(a));
-                    }
-
-                }
             } else {
                 response = null;
+            }
+            for (SensorActuatorNode san : server.getLogic().getNodes()) {
+                for(Sensor s : san.getSensors()) {
+                    if (s.getType().equalsIgnoreCase("humidity")) {
+                        server.sendResponseToClients(new HumidityMessage(s.getReading().getValue(), san.getId()));
+                    } else if (s.getType().equalsIgnoreCase("temperature")) {
+                        server.sendResponseToClients(new TemperatureMessage(s.getReading().getValue(), san.getId()));
+                    }
+                }
+
+                for (Actuator a : san.getActuators()) {
+                    server.sendResponseToClients(new ActuatorMessage(a));
+                }
+
             }
 
         } while (response != null);
