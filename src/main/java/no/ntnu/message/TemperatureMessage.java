@@ -16,7 +16,7 @@ public class TemperatureMessage implements Message{
         return this.temperature;
     }
 
-    public int getNode() {
+    public int getNodeId() {
         return this.nodeId;
     }
 
