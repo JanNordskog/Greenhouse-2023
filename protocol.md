@@ -23,7 +23,7 @@ choose this transport layer protocol?
 
 ## The architecture
 
-TODO - show the general architecture of your network. Which part is a server? Who are clients? 
+TODO - show the general architecture of your network. Which part is a serverTest? Who are clients? 
 Do you have one or several servers? Perhaps include a picture here. 
 
 
