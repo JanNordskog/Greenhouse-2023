@@ -3,6 +3,8 @@ package no.ntnu.run;
 import no.ntnu.controlpanel.CommunicationChannel;
 import no.ntnu.controlpanel.ControlPanelLogic;
 import no.ntnu.controlpanel.FakeCommunicationChannel;
+import no.ntnu.greenhouse.Actuator;
+import no.ntnu.greenhouse.ActuatorCollection;
 import no.ntnu.greenhouse.SensorReading;
 import no.ntnu.gui.controlpanel.ControlPanelApplication;
 import no.ntnu.tools.Logger;
@@ -125,6 +127,29 @@ class ServerCommunicationChannel implements CommunicationChannel {
         // Extracting nodeId from the data string
         String nodeIdPart = data.substring(data.indexOf("\"nodeId\":") + 9, data.indexOf(","));
         return Integer.parseInt(nodeIdPart.trim());
+    }
+
+    public Actuator extractActuator(String data) {
+        String actuatorsData = data.substring(data.indexOf("\"actuators\":") + 12, data.lastIndexOf("}]") + 2);
+
+        if (!actuatorsData.isEmpty() && actuatorsData.contains("{") && actuatorsData.contains("}")) {
+            int splitIndex = actuatorsData.indexOf("},");
+            String actuatorData;
+            if (splitIndex != -1) {
+                actuatorData = actuatorsData.substring(1, splitIndex + 1);
+            } else {
+                actuatorData = actuatorsData.substring(1, actuatorsData.length() - 1);
+            }
+
+            String type = removeFirstFourChars(extractValue(actuatorData, "type", "\","));
+            int id = Integer.parseInt(extractValue(actuatorData, "id\":", ","));
+            boolean state = "ON".equals(extractValue(actuatorData, "state\": \"", "\""));
+            int nodeId = extractNodeId(data);
+
+            return new Actuator(id, type, nodeId);
+        }
+
+        return null; // or throw an exception if no actuator data is found
     }
 
     public List<SensorReading> extractSensorReadings(String data) {

@@ -131,6 +131,10 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
     });
   }
 
+  @Override
+  public void onActuatorData(int nodeId, Actuator actuator) {
+
+  }
 
 
   @Override

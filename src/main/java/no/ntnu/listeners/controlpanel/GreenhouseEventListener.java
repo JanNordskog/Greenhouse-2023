@@ -2,6 +2,8 @@ package no.ntnu.listeners.controlpanel;
 
 import java.util.List;
 import no.ntnu.controlpanel.SensorActuatorNodeInfo;
+import no.ntnu.greenhouse.Actuator;
+import no.ntnu.greenhouse.ActuatorCollection;
 import no.ntnu.greenhouse.SensorReading;
 
 /**
@@ -35,6 +37,7 @@ public interface GreenhouseEventListener {
    */
   void onSensorData(int nodeId, List<SensorReading> sensors);
 
+  void onActuatorData(int nodeId, Actuator actuator);
   /**
    * This event is fired when an actuator changes state.
    *

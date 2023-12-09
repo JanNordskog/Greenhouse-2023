@@ -3,6 +3,7 @@ package no.ntnu.controlpanel;
 import java.util.LinkedList;
 import java.util.List;
 import no.ntnu.greenhouse.Actuator;
+import no.ntnu.greenhouse.ActuatorCollection;
 import no.ntnu.greenhouse.SensorReading;
 import no.ntnu.listeners.common.ActuatorListener;
 import no.ntnu.listeners.common.CommunicationChannelListener;
@@ -84,19 +85,21 @@ public class ControlPanelLogic implements GreenhouseEventListener, ActuatorListe
   }
 
   @Override
+  public void onActuatorData(int nodeId, Actuator actuator) {
+
+  }
+
+
+  @Override
   public void onActuatorStateChanged(int nodeId, int actuatorId, boolean isOn) {
     listeners.forEach(listener -> listener.onActuatorStateChanged(nodeId, actuatorId, isOn));
   }
 
   @Override
   public void actuatorUpdated(int nodeId, Actuator actuator) {
-    if (communicationChannel != null) {
-      communicationChannel.sendActuatorChange(nodeId, actuator.getId(), actuator.isOn());
-    }
-    listeners.forEach(listener ->
-        listener.onActuatorStateChanged(nodeId, actuator.getId(), actuator.isOn())
-    );
+    listeners.forEach(listener -> listener.onActuatorData(nodeId, actuator));
   }
+
 
   @Override
   public void onCommunicationChannelClosed() {
@@ -105,4 +108,6 @@ public class ControlPanelLogic implements GreenhouseEventListener, ActuatorListe
       communicationChannelListener.onCommunicationChannelClosed();
     }
   }
+
+
 }

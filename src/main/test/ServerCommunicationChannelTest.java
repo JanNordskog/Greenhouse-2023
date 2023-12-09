@@ -1,5 +1,7 @@
 package no.ntnu.run;
 
+import no.ntnu.greenhouse.Actuator;
+import no.ntnu.greenhouse.ActuatorCollection;
 import no.ntnu.greenhouse.SensorReading;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
@@ -85,4 +87,27 @@ class ServerCommunicationChannelTest {
 
         assertEquals(expectedJson, result, "JSON with a single object should become empty");
     }
+    @Test
+    public void testExtractActuatorCollections_NormalCase() {
+        ServerCommunicationChannel channel = new ServerCommunicationChannel(null, null);
+        String testData = "{ \"nodeId\": 3, \"actuators\": [{ \"type\": \"heater\", \"id\": 4, \"state\": \"ON\" }] }";
+
+        Actuator actuator = channel.extractActuator(testData);
+/*
+        assertNotNull(result, "Result should not be null");
+        assertEquals(1, result.size(), "Should contain one actuator collection");
+
+        ActuatorCollection actuatorCollection = result.get(0);
+        assertNotNull(actuatorCollection, "Actuator collection should not be null");
+        assertEquals(1, actuatorCollection.size(), "Actuator collection should contain one actuator");
+
+        Actuator actuator = actuatorCollection.get(4); // Assuming id is 4 as per testData
+        assertNotNull(actuator, "Actuator should not be null");
+        assertEquals("heater", actuator.getType(), "Actuator type should be 'heater'");
+        assertTrue(actuator.isOn(), "Actuator state should be ON");
+
+ */
+    }
+
+
 }
