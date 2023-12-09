@@ -51,10 +51,15 @@ public class ClientHandler extends Thread{
                     } else if (s.getType().equalsIgnoreCase("temperature")) {
                         server.sendResponseToClients(new TemperatureMessage(s.getReading().getValue(), san.getId()));
                     }
+
+                    System.out.println(s.getType() + ": " + s.getReading().getValue() + s.getReading().getUnit());
                 }
 
                 for (Actuator a : san.getActuators()) {
-                    server.sendResponseToClients(new ActuatorMessage(a));
+                    server.sendResponseToClients(new ActuatorMessage(a.getNodeId(), a.getId(), a.isOn()));
+                    System.out.println("Node: " + a.getNodeId() 
+                            + "Actuator: " + a.getId() 
+                            + "Is on: " + a.isOn());
                 }
 
             }
