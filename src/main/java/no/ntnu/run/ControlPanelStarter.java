@@ -1,9 +1,25 @@
 package no.ntnu.run;
 
+import static no.ntnu.server.Server.PORT_NUMBER;
+
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+import no.ntnu.Message;
+import no.ntnu.MessageSerializer;
 import no.ntnu.controlpanel.CommunicationChannel;
-import no.ntnu.controlpanel.ControlPanelLogic;
 import no.ntnu.controlpanel.FakeCommunicationChannel;
 import no.ntnu.gui.controlpanel.ControlPanelApplication;
+import no.ntnu.server.ServerCommunicationChannel;
+import no.ntnu.server.ServerLogic;
+import no.ntnu.ssl.SslConnection;
 import no.ntnu.tools.Logger;
 
 /**
@@ -13,9 +29,14 @@ import no.ntnu.tools.Logger;
  */
 public class ControlPanelStarter {
   private final boolean fake;
+  private Socket socket;
+  private ServerLogic logic;
+  private PrintWriter socketWriter;
+  private BufferedReader socketReader;
 
-  public ControlPanelStarter(boolean fake) {
+  public ControlPanelStarter(boolean fake, ServerLogic logic) {
     this.fake = fake;
+    this.logic = logic;
   }
 
   /**
@@ -24,19 +45,25 @@ public class ControlPanelStarter {
    * @param args Command line arguments, only the first one of them used: when it is "fake",
    *             emulate fake events, when it is either something else or not present,
    *             use real socket communication.
+   * @throws IOException
+   * @throws FileNotFoundException
+   * @throws CertificateException
+   * @throws KeyStoreException
+   * @throws NoSuchAlgorithmException
+   * @throws KeyManagementException
    */
-  public static void main(String[] args) {
+  public static void main(String[] args) throws KeyManagementException, NoSuchAlgorithmException, KeyStoreException, CertificateException, FileNotFoundException, IOException {
     boolean fake = false;
     if (args.length == 1 && "fake".equals(args[0])) {
       fake = true;
       Logger.info("Using FAKE events");
     }
-    ControlPanelStarter starter = new ControlPanelStarter(fake);
-    starter.start();
+/*     ControlPanelStarter starter = new ControlPanelStarter(false);
+    starter.start(); */
   }
 
-  private void start() {
-    ControlPanelLogic logic = new ControlPanelLogic();
+  public void start() throws KeyManagementException, NoSuchAlgorithmException, KeyStoreException, CertificateException, FileNotFoundException, IOException {
+    ServerLogic logic = new ServerLogic();
     CommunicationChannel channel = initiateCommunication(logic, fake);
     ControlPanelApplication.startApp(logic, channel);
     // This code is reached only after the GUI-window is closed
@@ -44,7 +71,7 @@ public class ControlPanelStarter {
     stopCommunication();
   }
 
-  private CommunicationChannel initiateCommunication(ControlPanelLogic logic, boolean fake) {
+  private CommunicationChannel initiateCommunication(ServerLogic logic, boolean fake) throws KeyManagementException, NoSuchAlgorithmException, KeyStoreException, CertificateException, FileNotFoundException, IOException {
     CommunicationChannel channel;
     if (fake) {
       channel = initiateFakeSpawner(logic);
@@ -54,14 +81,38 @@ public class ControlPanelStarter {
     return channel;
   }
 
-  private CommunicationChannel initiateSocketCommunication(ControlPanelLogic logic) {
-    // TODO - here you initiate TCP/UDP socket communication
-    // You communication class(es) may want to get reference to the logic and call necessary
-    // logic methods when events happen (for example, when sensor data is received)
-    return null;
+  private CommunicationChannel initiateSocketCommunication(ServerLogic logic) throws KeyManagementException, NoSuchAlgorithmException, KeyStoreException, CertificateException, FileNotFoundException, IOException {
+    try {
+      SslConnection con = new SslConnection(PORT_NUMBER);
+      Socket socket = con.client("localhost");
+      this.socketWriter = new PrintWriter(socket.getOutputStream(), true);
+      this.socketReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+      ServerCommunicationChannel channel = new ServerCommunicationChannel(logic, socketReader);
+      final int START_DELAY = 5;
+      channel.spawnNode("4;3-window", START_DELAY);
+      channel.spawnNode("1", START_DELAY + 1);
+      channel.spawnNode("1", START_DELAY + 2);
+      channel.advertiseSensorData("4;temperature=27.4 °C,temperature=26.8 °C,humidity=80 %", START_DELAY + 2);
+      channel.spawnNode("8;2-heater", START_DELAY + 3);
+      channel.advertiseActuatorState(4, 1, true, START_DELAY + 3);
+      channel.advertiseActuatorState(4, 1, false, START_DELAY + 4);
+      channel.advertiseActuatorState(4, 1, true, START_DELAY + 5);
+      channel.advertiseActuatorState(4, 2, true, START_DELAY + 5);
+      channel.advertiseActuatorState(4, 1, false, START_DELAY + 6);
+      channel.advertiseActuatorState(4, 2, false, START_DELAY + 6);
+      channel.advertiseActuatorState(4, 1, true, START_DELAY + 7);
+      channel.advertiseActuatorState(4, 2, true, START_DELAY + 8);
+      channel.advertiseSensorData("4;temperature=22.4 °C,temperature=26.0 °C,humidity=81 %", START_DELAY + 9);
+      channel.advertiseSensorData("1;humidity=80 %,humidity=82 %", START_DELAY + 10);
+      channel.advertiseRemovedNode(4, START_DELAY + 11);
+      return channel;
+    } catch (IOException e) {
+      System.err.println("Could not connect to server " + e.getMessage());
+      return null;
+    }
   }
 
-  private CommunicationChannel initiateFakeSpawner(ControlPanelLogic logic) {
+  private CommunicationChannel initiateFakeSpawner(ServerLogic logic) {
     // Here we pretend that some events will be received with a given delay
     FakeCommunicationChannel spawner = new FakeCommunicationChannel(logic);
     logic.setCommunicationChannel(spawner);
@@ -90,6 +141,28 @@ public class ControlPanelStarter {
   }
 
   private void stopCommunication() {
-    // TODO - here you stop the TCP/UDP socket communication
+    if (socket != null) {
+      try {
+        socket.close();
+        socket = null;
+        socketWriter = null;
+        socketReader = null;
+      } catch (IOException e) {
+        System.err.println("Error closing socket: " + e.getMessage());
+      }
+    }
+  }
+
+  public boolean sendMessage(Message message) {
+    boolean sent = false;
+
+    try {
+      socketWriter.println(MessageSerializer.toString(message));
+      sent = true;
+    } catch (Exception e) {
+      System.err.println("Could not send message: " + e.getMessage());
+    }
+
+    return sent;
   }
 }
