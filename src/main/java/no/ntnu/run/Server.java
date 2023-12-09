@@ -6,6 +6,8 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Server {
     private ServerSocket serverSocket;
@@ -91,6 +93,9 @@ public class Server {
 
         private String formatDataForControlPanel(String data) {
             if (data.contains("Actuator States")) {
+                return processActuatorStates(data);
+            }
+            if (data.contains("Actuator States")) {
                 // Handle actuator state data here
                 // For example, log it, process it, or just return null if no further action is needed
                 Logger.info("Received actuator state info: " + data);
@@ -132,6 +137,24 @@ public class Server {
                 e.printStackTrace();
                 return null;
             }
+        }
+        private String processActuatorStates(String data) {
+            // Assuming the format: "Node #3 Actuator States: [heater ID: 4 State: OFF]"
+            Pattern pattern = Pattern.compile("Node #(\\d+) Actuator States: \\[(.*) ID: (\\d+) State: (ON|OFF)\\]");
+            Matcher matcher = pattern.matcher(data);
+
+            if (matcher.find()) {
+                int nodeId = Integer.parseInt(matcher.group(1));
+                String actuatorType = matcher.group(2).trim();
+                int actuatorId = Integer.parseInt(matcher.group(3));
+                String actuatorState = matcher.group(4);
+
+                // Format into JSON-like structure
+                return String.format("{ \"nodeId\": %d, \"actuators\": [{ \"type\": \"%s\", \"id\": %d, \"state\": \"%s\" }] }",
+                        nodeId, actuatorType, actuatorId, actuatorState);
+            }
+
+            return null; // Return null if the pattern does not match
         }
     }
 }
