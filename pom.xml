@@ -13,13 +13,28 @@
         <java.version>17</java.version>
         <javafx.version>17.0.8</javafx.version>
         <javafx.maven.plugin.version>0.0.8</javafx.maven.plugin.version>
+
+        <junit.jupiter.version>5.9.2</junit.jupiter.version>
+        <javafx.maven.plugin.version>0.0.8</javafx.maven.plugin.version>
+        <maven.jar.plugin.version>3.3.0</maven.jar.plugin.version>
+        <maven.javadoc.plugin.version>3.4.1</maven.javadoc.plugin.version>
+        <javafx.version>19</javafx.version>
+        <application.main>no/ntnu/run/ControlPanelStarter.java</application.main>
+        <application.filename>Greenhouse-2023</application.filename>
     </properties>
+
 
     <dependencies>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.13.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${junit.jupiter.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -44,6 +59,14 @@
                 <configuration>
                     <source>${java.version}</source>
                     <target>${java.version}</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.openjfx</groupId>
+                <artifactId>javafx-maven-plugin</artifactId>
+                <version>${javafx.maven.plugin.version}</version>
+                <configuration>
+                    <mainClass>${application.main}</mainClass>
                 </configuration>
             </plugin>
             <plugin>
