@@ -1,5 +1,7 @@
 package no.ntnu.run;
 
+import no.ntnu.tools.Logger;
+
 import java.io.*;
 import java.net.*;
 import java.util.*;
@@ -68,7 +70,10 @@ public class Server {
 
                 String inputLine;
                 while ((inputLine = in.readLine()) != null) {
+                    // Print the entire received string from the client
                     System.out.println("Received from client: " + inputLine);
+
+                    // Then process the data as before
                     String formattedData = formatDataForControlPanel(inputLine);
                     if (formattedData != null) {
                         server.sendDataToControlPanel(formattedData);
@@ -85,6 +90,12 @@ public class Server {
         }
 
         private String formatDataForControlPanel(String data) {
+            if (data.contains("Actuator States")) {
+                // Handle actuator state data here
+                // For example, log it, process it, or just return null if no further action is needed
+                Logger.info("Received actuator state info: " + data);
+                return null;
+            }
             try {
                 // Example input: "Node #1: 23.5°C 50%"
                 String[] parts = data.split(":");

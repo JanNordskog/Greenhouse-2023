@@ -39,6 +39,65 @@ public class SensorActuatorNode implements ActuatorListener, CommunicationChanne
   private int serverPort;
 
 
+  private Timer actuatorStateTimer;
+  // Define the delay for actuator state reporting
+  private static final long ACTUATOR_REPORT_DELAY = 10000; // 10 seconds, for example
+
+  // Existing constructor and methods...
+
+  // Modify the start method
+  public void start() {
+    if (!running) {
+      startPeriodicSensorReading();
+      startPeriodicActuatorReporting(); // Start actuator reporting
+      running = true;
+      notifyStateChanges(true);
+    }
+  }
+
+  // Modify the stop method
+  public void stop() {
+    if (running) {
+      stopPeriodicSensorReading();
+      stopPeriodicActuatorReporting(); // Stop actuator reporting
+      running = false;
+      notifyStateChanges(false);
+    }
+  }
+
+  // New method to start periodic actuator reporting
+  private void startPeriodicActuatorReporting() {
+    actuatorStateTimer = new Timer();
+    TimerTask actuatorStateTask = new TimerTask() {
+      @Override
+      public void run() {
+        reportActuatorStates();
+      }
+    };
+    actuatorStateTimer.scheduleAtFixedRate(actuatorStateTask, ACTUATOR_REPORT_DELAY, ACTUATOR_REPORT_DELAY);
+  }
+
+  // New method to stop periodic actuator reporting
+  private void stopPeriodicActuatorReporting() {
+    if (actuatorStateTimer != null) {
+      actuatorStateTimer.cancel();
+    }
+  }
+
+  // New method to generate and send actuator state data
+  private void reportActuatorStates() {
+    StringBuilder sb = new StringBuilder();
+    sb.append("Node #").append(id).append(" Actuator States: ");
+    for (Actuator actuator : actuators) {
+      sb.append("[").append(actuator.getType())
+              .append(" ID: ").append(actuator.getId())
+              .append(" State: ").append(actuator.isOn() ? "ON" : "OFF")
+              .append("] ");
+    }
+    sendDataToServer(sb.toString());
+  }
+
+
   public SensorActuatorNode(int id, String serverAddress, int serverPort) {
     this.id = id;
     this.serverAddress = serverAddress;
@@ -183,29 +242,6 @@ public class SensorActuatorNode implements ActuatorListener, CommunicationChanne
 
 
   /**
-   * Start simulating the sensor node's operation.
-   */
-  public void start() {
-    if (!running) {
-      startPeriodicSensorReading();
-      running = true;
-      notifyStateChanges(true);
-    }
-  }
-
-  /**
-   * Stop simulating the sensor node's operation.
-   */
-  public void stop() {
-    if (running) {
-      Logger.info("-- Stopping simulation of node " + id);
-      stopPeriodicSensorReading();
-      running = false;
-      notifyStateChanges(false);
-    }
-  }
-
-  /**
    * Check whether the node is currently running.
    *
    * @return True if it is in a running-state, false otherwise
@@ -297,7 +333,13 @@ public class SensorActuatorNode implements ActuatorListener, CommunicationChanne
   public void actuatorUpdated(int nodeId, Actuator actuator) {
     actuator.applyImpact(this);
     notifyActuatorChange(actuator);
+
+    // Construct a message to send actuator state
+    String actuatorState = "Node #" + nodeId + " Actuator #" + actuator.getId() +
+            " State: " + (actuator.isOn() ? "ON" : "OFF");
+    sendDataToServer(actuatorState);
   }
+
 
   private void notifyActuatorChange(Actuator actuator) {
     String onOff = actuator.isOn() ? "ON" : "off";
@@ -386,4 +428,6 @@ public class SensorActuatorNode implements ActuatorListener, CommunicationChanne
       actuator.set(on);
     }
   }
+
+
 }
