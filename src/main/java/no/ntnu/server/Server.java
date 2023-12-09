@@ -17,7 +17,7 @@ import no.ntnu.ssl.SslConnection;
 
 public class Server {
 
-    public static final int PORT_NUMBER = 55001;
+    public static final int PORT_NUMBER = 1;
     private boolean isServerRunning = false;
     private List<ClientHandler> connectedClients = new ArrayList<>();
     private ServerLogic logic;
@@ -54,6 +54,7 @@ public class Server {
             Socket clientSocket = listeningSocket.accept();
             System.out.println("New client connected from: " + clientSocket.getRemoteSocketAddress());
             client = new ClientHandler(clientSocket, this);
+            connectedClients.add(client);
         } catch (IOException e) {
             System.err.println("Could not accept client connection: " + e.getMessage());
         }

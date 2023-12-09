@@ -21,7 +21,7 @@ public class ToggleActuatorCommand extends Command {
         Message message;
         try {
             logic.getNode(nodeId).getActuators().get(id).toggle();
-            message = new ActuatorMessage(logic.getNode(nodeId).getActuators().get(id));
+            message = new ActuatorMessage(logic.getNode(nodeId).getId(), logic.getNode(nodeId).getActuators().get(id).getId(), logic.getNode(nodeId).getActuators().get(id).isOn());
         } catch (Exception e) {
             message = new ErrorMessage(e.getMessage());
         }
@@ -35,6 +35,10 @@ public class ToggleActuatorCommand extends Command {
 
     public int getNodeId() {
         return this.nodeId;
+    }
+
+    public boolean isOn(ServerLogic logic) {
+        return logic.getNode(nodeId).getActuators().get(id).isOn();
     }
     
 }

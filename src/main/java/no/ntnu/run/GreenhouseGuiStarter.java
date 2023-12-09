@@ -1,7 +1,6 @@
 package no.ntnu.run;
 
 import no.ntnu.gui.greenhouse.GreenhouseApplication;
-import no.ntnu.tools.Logger;
 
 /**
  * Starter for GUI version of the greenhouse simulator.
@@ -15,11 +14,6 @@ public class GreenhouseGuiStarter {
    *             use real socket communication.
    */
   public static void main(String[] args) {
-    boolean fake = false;
-    if (args.length == 1 && "fake".equals(args[0])) {
-      fake = true;
-      Logger.info("Using FAKE events");
-    }
-    GreenhouseApplication.startApp(fake);
+    GreenhouseApplication.startApp(false);
   }
 }

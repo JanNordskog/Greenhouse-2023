@@ -12,8 +12,11 @@ import javafx.scene.control.TitledPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+import no.ntnu.Message;
 import no.ntnu.greenhouse.Actuator;
 import no.ntnu.greenhouse.ActuatorCollection;
+import no.ntnu.greenhouse.GreenhouseSimulator;
+import no.ntnu.message.ActuatorMessage;
 
 /**
  * A section of the GUI representing a list of actuators. Can be used both on the sensor/actuator
@@ -22,7 +25,7 @@ import no.ntnu.greenhouse.ActuatorCollection;
 public class ActuatorPane extends TitledPane {
   private final Map<Actuator, SimpleStringProperty> actuatorValue = new HashMap<>();
   private final Map<Actuator, SimpleBooleanProperty> actuatorActive = new HashMap<>();
-
+  private GreenhouseSimulator simulator = null;
   /**
    * Create an actuator pane.
    *
@@ -58,8 +61,16 @@ public class ActuatorPane extends TitledPane {
     checkbox.selectedProperty().addListener((observable, oldValue, newValue) -> {
       if (newValue != null && newValue) {
         actuator.turnOn();
+        if (this.simulator != null) {
+          Message msg = new ActuatorMessage(actuator.getNodeId(), actuator.getId(), actuator.isOn());
+          this.simulator.sendMessage(msg);
+        }
       } else {
         actuator.turnOff();
+        if (this.simulator != null) {
+          Message msg = new ActuatorMessage(actuator.getNodeId(), actuator.getId(), actuator.isOn());
+          this.simulator.sendMessage(msg);
+        }
       }
     });
     return checkbox;
@@ -94,5 +105,9 @@ public class ActuatorPane extends TitledPane {
       actuatorText.set(generateActuatorText(actuator));
       actuatorSelected.set(actuator.isOn());
     });
+  }
+
+  public void setSimulator(GreenhouseSimulator simulator) {
+    this.simulator = simulator;
   }
 }
