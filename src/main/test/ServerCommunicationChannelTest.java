@@ -87,13 +87,15 @@ class ServerCommunicationChannelTest {
 
         assertEquals(expectedJson, result, "JSON with a single object should become empty");
     }
+
+    /*
     @Test
     public void testExtractActuatorCollections_NormalCase() {
         ServerCommunicationChannel channel = new ServerCommunicationChannel(null, null);
         String testData = "{ \"nodeId\": 3, \"actuators\": [{ \"type\": \"heater\", \"id\": 4, \"state\": \"ON\" }] }";
 
         Actuator actuator = channel.extractActuator(testData);
-/*
+
         assertNotNull(result, "Result should not be null");
         assertEquals(1, result.size(), "Should contain one actuator collection");
 
@@ -106,7 +108,30 @@ class ServerCommunicationChannelTest {
         assertEquals("heater", actuator.getType(), "Actuator type should be 'heater'");
         assertTrue(actuator.isOn(), "Actuator state should be ON");
 
- */
+
+    } */
+
+    @Test
+    public void testExtractActuator() {
+        String data = "{\"nodeId\": 3, \"actuators\": [{ \"type\": \"heater\", \"id\": 4, \"state\": \"ON\" }] }";
+        ServerCommunicationChannel channel = new ServerCommunicationChannel(null, null);
+
+        Actuator actuator = channel.extractActuator(data);
+
+        assertNotNull(actuator);
+        assertEquals(4, actuator.getId());
+        assertEquals("heater", actuator.getType());
+        assertEquals(3, actuator.getNodeId());
+    }
+
+    @Test
+    public void testExtractActuatorEmptyData() {
+        String data = "{\"nodeId\": 3, \"actuators\": [] }";
+        ServerCommunicationChannel channel = new ServerCommunicationChannel(null, null);
+
+        Actuator actuator = channel.extractActuator(data);
+
+        assertNull(actuator);
     }
 
 

@@ -114,6 +114,14 @@ class ServerCommunicationChannel implements CommunicationChannel {
     }
 
     private void processReceivedData(String data) {
+        if(data.contains("actuators")){
+            int nodeId = extractNodeId(data);
+            Actuator actuator = extractActuator(data);
+            logic.actuatorUpdated(nodeId, actuator);
+            System.out.println(actuator);
+
+        }else{
+
         try {
             int nodeId = extractNodeId(data);
             List<SensorReading> sensorReadings = extractSensorReadings(data);
@@ -121,6 +129,7 @@ class ServerCommunicationChannel implements CommunicationChannel {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
     }
 
     private int extractNodeId(String data) {
