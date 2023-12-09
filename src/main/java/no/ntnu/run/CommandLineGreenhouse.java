@@ -1,5 +1,9 @@
 package no.ntnu.run;
 
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
 import no.ntnu.greenhouse.GreenhouseSimulator;
 import no.ntnu.tools.Logger;
 
@@ -13,8 +17,12 @@ public class CommandLineGreenhouse {
    * @param args Command line arguments, only the first one of them used: when it is "fake",
    *             emulate fake events, when it is either something else or not present,
    *             use real socket communication.
+   * @throws CertificateException
+   * @throws NoSuchAlgorithmException
+   * @throws KeyStoreException
+   * @throws KeyManagementException
    */
-  public static void main(String[] args) {
+  public static void main(String[] args) throws KeyManagementException, KeyStoreException, NoSuchAlgorithmException, CertificateException {
     Logger.info("Running greenhouse simulator in command line (without GUI)...");
     boolean fake = false;
     if (args.length == 1 && "fake".equals(args[0])) {

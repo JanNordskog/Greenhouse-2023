@@ -1,5 +1,9 @@
 package no.ntnu.gui.greenhouse;
 
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
 import java.util.HashMap;
 import java.util.Map;
 import javafx.application.Application;
@@ -19,7 +23,7 @@ public class GreenhouseApplication extends Application implements NodeStateListe
   private Stage mainStage;
 
   @Override
-  public void start(Stage mainStage) {
+  public void start(Stage mainStage) throws KeyManagementException, KeyStoreException, NoSuchAlgorithmException, CertificateException {
     this.mainStage = mainStage;
     mainStage.setScene(new MainGreenhouseGuiWindow());
     mainStage.setMinWidth(MainGreenhouseGuiWindow.WIDTH);
@@ -71,5 +75,9 @@ public class GreenhouseApplication extends Application implements NodeStateListe
         Platform.runLater(mainStage::close);
       }
     }
+  }
+
+  public GreenhouseSimulator getSimulator() {
+    return simulator;
   }
 }

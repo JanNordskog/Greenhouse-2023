@@ -9,6 +9,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import no.ntnu.greenhouse.Actuator;
 import no.ntnu.greenhouse.SensorReading;
+import no.ntnu.server.ServerLogic;
 import no.ntnu.tools.Logger;
 
 /**
@@ -18,14 +19,14 @@ import no.ntnu.tools.Logger;
  */
 public class FakeCommunicationChannel implements CommunicationChannel {
 
-  private final ControlPanelLogic logic;
+  private final ServerLogic logic;
 
   /**
    * Create a new fake communication channel.
    *
    * @param logic The application logic of the control panel node.
    */
-  public FakeCommunicationChannel(ControlPanelLogic logic) {
+  public FakeCommunicationChannel(ServerLogic logic) {
     this.logic = logic;
   }
 
