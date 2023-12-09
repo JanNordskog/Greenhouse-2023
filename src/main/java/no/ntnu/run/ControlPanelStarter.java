@@ -58,12 +58,12 @@ public class ControlPanelStarter {
       fake = true;
       Logger.info("Using FAKE events");
     }
-/*     ControlPanelStarter starter = new ControlPanelStarter(false);
-    starter.start(); */
+    ServerLogic logic = new ServerLogic();
+    ControlPanelStarter starter = new ControlPanelStarter(false, logic);
+    starter.start();
   }
 
   public void start() throws KeyManagementException, NoSuchAlgorithmException, KeyStoreException, CertificateException, FileNotFoundException, IOException {
-    ServerLogic logic = new ServerLogic();
     CommunicationChannel channel = initiateCommunication(logic, fake);
     ControlPanelApplication.startApp(logic, channel);
     // This code is reached only after the GUI-window is closed
