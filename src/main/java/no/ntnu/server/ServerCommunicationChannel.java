@@ -4,8 +4,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 import no.ntnu.Message;
 import no.ntnu.MessageSerializer;
 import no.ntnu.controlpanel.CommunicationChannel;
@@ -106,9 +104,8 @@ public class ServerCommunicationChannel implements CommunicationChannel {
           Logger.info("Node id: " + a.getNodeId() + ", Actuator id: "
               + a.getId() + ", Is on: " + a.isOn()
               + ", Type: " + a.getType());
-          if (nodeData.getActuators().get(a.getId()) != null) {
-            advertiseActuatorState(a.getNodeId(), a.getId(), a.isOn(), 0);
-          }
+
+          advertiseActuatorState(a.getNodeId(), a.getId(), a.isOn(), 0);
         }
       }
 
@@ -148,13 +145,7 @@ public class ServerCommunicationChannel implements CommunicationChannel {
     }
     int nodeId = Parser.parseIntegerOrError(parts[0], "Invalid node ID:" + parts[0]);
     List<SensorReading> sensors = parseSensors(parts[1]);
-    Timer timer = new Timer();
-    timer.schedule(new TimerTask() {
-      @Override
-      public void run() {
-        logic.onSensorData(nodeId, sensors);
-      }
-    }, delay * 1000L);
+    logic.onSensorData(nodeId, sensors);
   }
 
   private List<SensorReading> parseSensors(String sensorInfo) {
@@ -183,23 +174,11 @@ public class ServerCommunicationChannel implements CommunicationChannel {
   }
 
   private void advertiseActuatorState(int nodeId, int actuatorId, boolean on, int delay) {
-    Timer timer = new Timer();
-    timer.schedule(new TimerTask() {
-      @Override
-      public void run() {
-        logic.onActuatorStateChanged(nodeId, actuatorId, on);
-      }
-    }, delay * 1000L);
+    logic.onActuatorStateChanged(nodeId, actuatorId, on);
   }
 
   private void advertiseRemovedNode(int nodeId, int delay) {
-    Timer timer = new Timer();
-    timer.schedule(new TimerTask() {
-      @Override
-      public void run() {
-        logic.onNodeRemoved(nodeId);
-      }
-    }, delay * 1000L);
+    logic.onNodeRemoved(nodeId);
   }
 
   private void parseActuator(String actuatorSpecification, SensorActuatorNodeInfo info) {

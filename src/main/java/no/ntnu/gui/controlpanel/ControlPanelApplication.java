@@ -136,7 +136,7 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
         }
         actuatorPane.update(actuator);
       } else {
-        Logger.error(" actuator not found");
+        /* Logger.error(" actuator not found"); */
       }
     } else {
       Logger.error("No actuator section for node " + nodeId);

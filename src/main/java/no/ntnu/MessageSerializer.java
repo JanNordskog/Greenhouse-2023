@@ -92,7 +92,7 @@ public class MessageSerializer {
    * @param nodeInformation Information about a node in string format.
    * @return returns a node.
    */
-  public static SensorActuatorNode parseSensorFromData(String nodeInformation) {
+  private static SensorActuatorNode parseSensorFromData(String nodeInformation) {
     String[] parts = nodeInformation.split(";");
 
     Integer nodeId =

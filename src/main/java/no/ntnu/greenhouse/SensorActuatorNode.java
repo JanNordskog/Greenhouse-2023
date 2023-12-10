@@ -172,10 +172,7 @@ public class SensorActuatorNode implements ActuatorListener, CommunicationChanne
     }
   }
 
-  /**
-   * Generate new sensor values and send a notification to all listeners.
-   */
-  public void generateNewSensorValues() {
+  private void generateNewSensorValues() {
     Logger.infoNoNewline("Node #" + id);
     addRandomNoiseToSensors();
     notifySensorChanges();
