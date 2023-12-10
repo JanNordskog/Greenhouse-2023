@@ -34,5 +34,12 @@ public class ServerLogicTest {
     assertSame(mockNode, serverLogic.getNode(nodeId));
   }
 
+  @Test
+  public void testOnNodeAdded() {
+    serverLogic.addListener(mockListener);
+    serverLogic.onNodeAdded(null); // Assuming null for simplicity
+    verify(mockListener, times(1)).onNodeAdded(any());
+  }
+
 
 }
