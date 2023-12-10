@@ -7,6 +7,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.Mockito.*;
 
 public class ServerLogicTest {
@@ -23,7 +26,13 @@ public class ServerLogicTest {
     serverLogic = new ServerLogic();
   }
 
-
+  @Test
+  public void testAddNode() {
+    int nodeId = 1;
+    serverLogic.addNode(nodeId, mockNode);
+    assertEquals(1, serverLogic.getAmountOfNodes());
+    assertSame(mockNode, serverLogic.getNode(nodeId));
+  }
 
 
 }
