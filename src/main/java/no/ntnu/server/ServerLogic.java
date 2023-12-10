@@ -17,122 +17,124 @@ import no.ntnu.message.NodeDataMessage;
 import no.ntnu.run.ClientHandler;
 import no.ntnu.tools.Logger;
 
-public class ServerLogic implements ActuatorListener, CommunicationChannelListener, GreenhouseEventListener {
-    
-    private final List<GreenhouseEventListener> listeners = new LinkedList<>();
-    private final Map<Integer, SensorActuatorNode> nodes = new HashMap<>();
-    private CommunicationChannel communicationChannel;
-    private CommunicationChannelListener channelListener;
-    private List<ClientHandler> clients;
+public class ServerLogic
+    implements ActuatorListener, CommunicationChannelListener, GreenhouseEventListener {
 
-    public ServerLogic() {
+  private final List<GreenhouseEventListener> listeners = new LinkedList<>();
+  private final Map<Integer, SensorActuatorNode> nodes = new HashMap<>();
+  private CommunicationChannel communicationChannel;
+  private CommunicationChannelListener channelListener;
+  private List<ClientHandler> clients;
 
+  public ServerLogic() {
+
+  }
+
+  /**
+   * Returns the node with the given id. Returns null if no node is found.
+   * 
+   * @param nodeId Id of wanted ndoe.
+   * @return Returns the node with the given id. null if not found.
+   */
+  public SensorActuatorNode getNode(int nodeId) {
+    return nodes.get(nodeId);
+  }
+
+  public void addNode(int nodeId, SensorActuatorNode node) {
+    nodes.put(nodeId, node);
+  }
+
+  /**
+   * Gets all the nodes connected to the server.
+   * 
+   * @return all the nodes connected to the server.
+   */
+  public Map<Integer, SensorActuatorNode> getNodes() {
+    return nodes;
+  }
+
+  public int getAmountOfNodes() {
+    return nodes.size();
+  }
+
+  public void addListener(GreenhouseEventListener listener) {
+    if (!listeners.contains(listener)) {
+      listeners.add(listener);
     }
+  }
 
-    /**
-     * Returns the node with the given id.
-     * Returns null if no node is found.
-     * @param nodeId Id of wanted ndoe.
-     * @return Returns the node with the given id. null if not found.
-     */
-    public SensorActuatorNode getNode(int nodeId) {
-        return nodes.get(nodeId);
-    }
+  public void setCommunicationChannelListener(CommunicationChannelListener listener) {
+    this.channelListener = listener;
+  }
 
-    public void addNode(int nodeId, SensorActuatorNode node) {
-        nodes.put(nodeId, node);
+  @Override
+  public void onCommunicationChannelClosed() {
+    Logger.info("Closing communication");
+    if (channelListener != null) {
+      channelListener.onCommunicationChannelClosed();
     }
+  }
 
-    /**
-     * Gets all the nodes connected to the server.
-     * @return all the nodes connected to the server.
-     */
-    public Map<Integer, SensorActuatorNode> getNodes() {
-        return nodes;
+  @Override
+  public void actuatorUpdated(int nodeId, Actuator actuator) {
+    if (communicationChannel != null) {
+      communicationChannel.sendActuatorChange(nodeId, actuator.getId(), actuator.isOn());
     }
+  }
 
-    public int getAmountOfNodes() {
-        return nodes.size();
-    }
+  public void setCommunicationChannel(CommunicationChannel channel) {
+    this.communicationChannel = channel;
+  }
 
-    public void addListener(GreenhouseEventListener listener) {
-        if (!listeners.contains(listener)) {
-            listeners.add(listener);
-        }
-    }
+  @Override
+  public void onNodeAdded(SensorActuatorNodeInfo info) {
+    listeners.forEach(listener -> listener.onNodeAdded(info));
+  }
 
-    public void setCommunicationChannelListener(CommunicationChannelListener listener) {
-        this.channelListener = listener;
-    }
+  @Override
+  public void onNodeRemoved(int nodeId) {
+    listeners.forEach(l -> l.onNodeRemoved(nodeId));
+  }
 
-    @Override
-    public void onCommunicationChannelClosed() {
-        Logger.info("Closing communication");
-        if (channelListener != null) {
-            channelListener.onCommunicationChannelClosed();
-        }
-    }
+  @Override
+  public void onSensorData(int nodeId, List<SensorReading> sensors) {
+    listeners.forEach(l -> l.onSensorData(nodeId, sensors));
+  }
 
-    @Override
-    public void actuatorUpdated(int nodeId, Actuator actuator) {
-        if (communicationChannel != null) {
-            communicationChannel.sendActuatorChange(nodeId, actuator.getId(), actuator.isOn());
-        }
-    }
+  @Override
+  public void onActuatorStateChanged(int nodeId, int actuatorId, boolean isOn) {
+    listeners.forEach(l -> l.onActuatorStateChanged(nodeId, actuatorId, isOn));
+  }
 
-    public void setCommunicationChannel(CommunicationChannel channel) {
-        this.communicationChannel = channel;
+  public void start() {
+    for (SensorActuatorNode node : nodes.values()) {
+      node.start(this);
     }
+  }
 
-    @Override
-    public void onNodeAdded(SensorActuatorNodeInfo info) {
-        listeners.forEach(listener -> listener.onNodeAdded(info));
+  public void stop() {
+    for (SensorActuatorNode node : nodes.values()) {
+      node.stop();
     }
+  }
 
-    @Override
-    public void onNodeRemoved(int nodeId) {
-        listeners.forEach(l -> l.onNodeRemoved(nodeId));
+  public void subscribeToLifecycleUpdates(NodeStateListener listener) {
+    for (SensorActuatorNode node : nodes.values()) {
+      node.addStateListener(listener);
     }
+  }
 
-    @Override
-    public void onSensorData(int nodeId, List<SensorReading> sensors) {
-        listeners.forEach(l -> l.onSensorData(nodeId, sensors));
-    }
+  public void setClientHandlers(List<ClientHandler> clients) {
+    this.clients = clients;
+  }
 
-    @Override
-    public void onActuatorStateChanged(int nodeId, int actuatorId, boolean isOn) {
-        listeners.forEach(l -> l.onActuatorStateChanged(nodeId, actuatorId, isOn));
+  public void sendData() {
+    for (ClientHandler c : this.clients) {
+      for (SensorActuatorNode n : nodes.values()) {
+        NodeDataMessage msg = new NodeDataMessage(n);
+        c.sendToClient(msg);
+      }
     }
-
-    public void start() {
-        for (SensorActuatorNode node : nodes.values()) {
-            node.start(this);
-          }
-    }
-
-    public void stop() {
-        for (SensorActuatorNode node : nodes.values()) {
-            node.stop();
-          }
-    }
-
-    public void subscribeToLifecycleUpdates(NodeStateListener listener) {
-        for (SensorActuatorNode node : nodes.values()) {
-            node.addStateListener(listener);
-        }
-    }
-
-    public void setClientHandlers(List<ClientHandler> clients) {
-        this.clients = clients;
-    }
-
-    public void sendData() {
-        for (ClientHandler c : this.clients) {
-            for (SensorActuatorNode n : nodes.values()) {
-                NodeDataMessage msg = new NodeDataMessage(n);
-                c.sendToClient(msg);
-            }
-        }
-    }
+  }
 
 }

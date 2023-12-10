@@ -37,7 +37,7 @@ public class MessageSerializer {
     if (message instanceof RequestDataCommand) {
       m = requestDataCommand;
     } else if (message instanceof NodeDataMessage nodeData) {
-      String holder = nodeData.getId() + ";";
+      String holder = SENSOR_NODE_INFO + nodeData.getId() + ";";
       for (Actuator a : nodeData.getActuators()) {
         holder += a.getId() + "_" + a.getType() + ",";
       }

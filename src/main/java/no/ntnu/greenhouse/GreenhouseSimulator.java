@@ -67,7 +67,8 @@ public class GreenhouseSimulator {
    * @throws KeyManagementException
    * @throws UnrecoverableKeyException
    */
-  public void start() throws KeyManagementException, KeyStoreException, NoSuchAlgorithmException, CertificateException, UnrecoverableKeyException {
+  public void start() throws KeyManagementException, KeyStoreException,
+      NoSuchAlgorithmException, CertificateException, UnrecoverableKeyException {
     initiateCommunication();
     logic.start();
     for (PeriodicSwitch periodicSwitch : periodicSwitches) {
@@ -76,7 +77,8 @@ public class GreenhouseSimulator {
     Logger.info("Simulator started");
   }
 
-  private void initiateCommunication() throws KeyManagementException, KeyStoreException, NoSuchAlgorithmException, CertificateException, UnrecoverableKeyException {
+  private void initiateCommunication() throws KeyManagementException, KeyStoreException,
+      NoSuchAlgorithmException, CertificateException, UnrecoverableKeyException {
     if (fake) {
       initiateFakePeriodicSwitches();
     } else {
@@ -99,12 +101,12 @@ public class GreenhouseSimulator {
               logic.setClientHandlers(connectedClients);
               handler.start();
             }
-            System.out.println("Hello");
           }
         }
   
-      } catch (IOException | KeyStoreException | UnrecoverableKeyException | KeyManagementException | NoSuchAlgorithmException | CertificateException e) {
-        System.err.println("Could open server: " + e.getMessage());
+      } catch (IOException | KeyStoreException | UnrecoverableKeyException
+        | KeyManagementException | NoSuchAlgorithmException | CertificateException e) {
+        System.err.println("Could not open server: " + e.getMessage());
       }
     }).start();
     

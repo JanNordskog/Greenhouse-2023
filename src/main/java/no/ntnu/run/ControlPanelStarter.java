@@ -17,16 +17,10 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import no.ntnu.Command;
-import no.ntnu.Message;
 import no.ntnu.MessageSerializer;
 import no.ntnu.command.RequestDataCommand;
-import no.ntnu.greenhouse.Actuator;
-import no.ntnu.greenhouse.Sensor;
 import no.ntnu.greenhouse.SensorActuatorNode;
 import no.ntnu.gui.controlpanel.ControlPanelApplication;
-import no.ntnu.message.ActuatorMessage;
-import no.ntnu.message.CloseNodeMessage;
-import no.ntnu.message.NodeDataMessage;
 import no.ntnu.server.ServerCommunicationChannel;
 import no.ntnu.server.ServerLogic;
 import no.ntnu.ssl.SslConnection;
@@ -45,6 +39,11 @@ public class ControlPanelStarter {
   private BufferedReader socketReader;
   private List<SensorActuatorNode> nodes;
 
+  /**
+   * Opens the 
+   * @param fake
+   * @param logic
+   */
   public ControlPanelStarter(boolean fake, ServerLogic logic) {
     this.fake = fake;
     this.logic = logic;
@@ -67,13 +66,15 @@ public class ControlPanelStarter {
   public static void main(String[] args) throws KeyManagementException, NoSuchAlgorithmException,
       KeyStoreException, CertificateException, FileNotFoundException, IOException {
     ServerLogic logic = new ServerLogic();
+    logic.start();
     ControlPanelStarter starter = new ControlPanelStarter(false, logic);
     starter.start();
   }
 
   public void start() throws KeyManagementException, NoSuchAlgorithmException,
       KeyStoreException, CertificateException, FileNotFoundException, IOException {
-    ServerCommunicationChannel channel = initiateCommunication(logic, fake);
+    ServerCommunicationChannel channel = initiateCommunication(this.logic, fake);
+    channel.setNodes(nodes);
     sendCommand(new RequestDataCommand());
     this.requestNodeDataSchedule(2000);
     ControlPanelApplication.startApp(logic, channel, this);
@@ -86,7 +87,7 @@ public class ControlPanelStarter {
       throws KeyManagementException, NoSuchAlgorithmException, KeyStoreException,
       CertificateException, FileNotFoundException, IOException {
     ServerCommunicationChannel channel;
-    channel = initiateSocketCommunication(logic);
+    channel = initiateSocketCommunication(this.logic);
     return channel;
   }
 
@@ -98,27 +99,12 @@ public class ControlPanelStarter {
       Socket socket = con.client("localhost");
       this.socketWriter = new PrintWriter(socket.getOutputStream(), true);
       this.socketReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-      ServerCommunicationChannel channel = new ServerCommunicationChannel(logic, socketReader);
+      ServerCommunicationChannel channel = new ServerCommunicationChannel(this.logic, socketReader);
       return channel;
     } catch (IOException e) {
       System.err.println("Could not connect to server " + e.getMessage());
       return null;
     }
-  }
-
-  public void startListeningThread(ServerCommunicationChannel channel) {
-    new Thread(() -> {
-      Message msg = null;
-      do {
-        try {
-          String rawMessage = socketReader.readLine();
-          msg = MessageSerializer.fromString(rawMessage);
-          handleIncomingMessage(msg, channel);
-        } catch (IOException e) {
-          System.err.println("Could not read message: " + e.getMessage());
-        }
-      } while (msg != null);
-    });
   }
 
   private void requestNodeDataSchedule(int delay) {
@@ -144,43 +130,15 @@ public class ControlPanelStarter {
     }
   }
 
-  private void handleIncomingMessage(Message message, ServerCommunicationChannel channel) {
-    if (message instanceof NodeDataMessage nodeData) {
-      SensorActuatorNode node = nodeData.getNode();
-      boolean nodeExist = false;
-      for (SensorActuatorNode san : nodes) {
-        if (san.getId() == nodeData.getId()) {
-          nodeExist = true;
-        }
-      }
-      String nodeString = nodeData.getId() + ";";
-
-      for (Actuator a : nodeData.getActuators()) {
-        nodeString += a.getId() + ",";
-      }
-      for (Sensor s : nodeData.getSensors()) {
-        nodeString += s.getType() + "="
-          + s.getReading().getValue() + " "
-          + s.getReading().getUnit();
-      }
-      if (!nodeExist) {
-        nodes.add(node);
-        channel.spawnNode(nodeString, 0);
-      }
-      channel.advertiseSensorData(nodeString, 0);
-    } else if (message instanceof ActuatorMessage am) {
-      channel.advertiseActuatorState(am.getNodeId(), am.getActuatorId(), am.isOn(), 0);
-    } else if (message instanceof CloseNodeMessage cnm) {
-      channel.advertiseRemovedNode(cnm.getNodeId(), 0);
-    }
-  }
-
   private boolean sendCommand(Command command) {
     boolean sent = false;
 
     try {
-      socketWriter.println(MessageSerializer.toString(command));
-      sent = true;
+      String commandString = MessageSerializer.toString(command);
+      if (commandString.length() > 0) {
+        socketWriter.println(MessageSerializer.toString(command));
+        sent = true;
+      }
     } catch (Exception e) {
       System.err.println("Could not send message: " + e.getMessage());
     }

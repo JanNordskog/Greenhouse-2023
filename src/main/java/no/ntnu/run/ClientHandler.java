@@ -65,8 +65,16 @@ public class ClientHandler extends Thread {
     return (Command) clientCommand;
   }
 
+  /**
+   * Sends message to clients.
+   *
+   * @param message the message to send.
+   */
   public void sendToClient(Message message) {
-    socketWriter.println(MessageSerializer.toString(message));
+    String messageString = MessageSerializer.toString(message);
+    if (!messageString.isEmpty() && messageString != null) {
+      socketWriter.println(MessageSerializer.toString(message));
+    }
   }
 
 
