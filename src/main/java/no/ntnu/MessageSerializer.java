@@ -59,6 +59,12 @@ public class MessageSerializer {
     return m;
   }
 
+  /**
+   * Turns string to a message.
+   *
+   * @param s string to turn into a message.
+   * @return message.
+   */
   public static Message fromString(String s) {
     Message m = null;
 
@@ -148,27 +154,6 @@ public class MessageSerializer {
     return valid;
   }
 
-  public static char getUnit(String message) {
-    char c = 0;
-
-    if (isUnitValid(message)) {
-      c = message.charAt(message.length() - 1);
-    }
-
-    return c;
-  }
-
-  public static double parseDouble(String s, int position) {
-    String[] split = s.substring(0, s.length() - 1).split(",");
-    double value = 0;
-    try {
-      value = Double.valueOf(split[position]);
-    } catch (NumberFormatException e) {
-      System.err.println("Could not parse String <" + s + "> to double");
-    }
-    return value;
-  }
-
   private static Integer parseInteger(String s, int position) {
     Integer i = null;
     String[] split;
@@ -184,18 +169,5 @@ public class MessageSerializer {
     }
 
     return i;
-  }
-
-  public static Message ParseParameterizedMessage(String s) {
-    Message m = null;
-
-    String parameter = s.substring(1);
-    if (s.startsWith(actuatorCommand)) {
-      Integer nodeId = parseInteger(parameter, 0);
-      Integer actuatorId = parseInteger(parameter, 1);
-      m = new ToggleActuatorCommand(nodeId, actuatorId);
-    }
-
-    return m;
   }
 }

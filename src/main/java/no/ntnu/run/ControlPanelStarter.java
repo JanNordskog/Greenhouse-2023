@@ -32,7 +32,6 @@ import no.ntnu.tools.Logger;
  * debugger (JavaFX modules not found)
  */
 public class ControlPanelStarter {
-  private final boolean fake;
   private Socket socket;
   private ServerLogic logic;
   private PrintWriter socketWriter;
@@ -40,12 +39,11 @@ public class ControlPanelStarter {
   private List<SensorActuatorNode> nodes;
 
   /**
-   * Opens the 
-   * @param fake
-   * @param logic
+   * Opens the control panel client.
+   *
+   * @param logic The client logic.
    */
-  public ControlPanelStarter(boolean fake, ServerLogic logic) {
-    this.fake = fake;
+  public ControlPanelStarter(ServerLogic logic) {
     this.logic = logic;
     this.nodes = new ArrayList<>();
   }
@@ -56,34 +54,44 @@ public class ControlPanelStarter {
    * @param args Command line arguments, only the first one of them used: when it is "fake",
    *             emulate fake events, when it is either something else or not present,
    *             use real socket communication.
-   * @throws IOException
-   * @throws FileNotFoundException
-   * @throws CertificateException
-   * @throws KeyStoreException
-   * @throws NoSuchAlgorithmException
-   * @throws KeyManagementException
+   * @throws IOException Exception.
+   * @throws FileNotFoundException Exception.
+   * @throws CertificateException Exception.
+   * @throws KeyStoreException Exception.
+   * @throws NoSuchAlgorithmException Exception.
+   * @throws KeyManagementException Exception.
    */
   public static void main(String[] args) throws KeyManagementException, NoSuchAlgorithmException,
       KeyStoreException, CertificateException, FileNotFoundException, IOException {
     ServerLogic logic = new ServerLogic();
     logic.start();
-    ControlPanelStarter starter = new ControlPanelStarter(false, logic);
+    ControlPanelStarter starter = new ControlPanelStarter(logic);
     starter.start();
   }
 
+  /**
+   * Starts the application.
+   *
+   * @throws KeyManagementException Exception.
+   * @throws NoSuchAlgorithmException Exception.
+   * @throws KeyStoreException Exception.
+   * @throws CertificateException Exception.
+   * @throws FileNotFoundException Exception.
+   * @throws IOException Exception.
+   */
   public void start() throws KeyManagementException, NoSuchAlgorithmException,
       KeyStoreException, CertificateException, FileNotFoundException, IOException {
-    ServerCommunicationChannel channel = initiateCommunication(this.logic, fake);
+    ServerCommunicationChannel channel = initiateCommunication(this.logic);
     channel.setNodes(nodes);
     sendCommand(new RequestDataCommand());
     this.requestNodeDataSchedule(2000);
-    ControlPanelApplication.startApp(logic, channel, this);
+    ControlPanelApplication.startApp(logic, channel);
     // This code is reached only after the GUI-window is closed
     Logger.info("Exiting the control panel application");
     stopCommunication();
   }
 
-  private ServerCommunicationChannel initiateCommunication(ServerLogic logic, boolean fake)
+  private ServerCommunicationChannel initiateCommunication(ServerLogic logic)
       throws KeyManagementException, NoSuchAlgorithmException, KeyStoreException,
       CertificateException, FileNotFoundException, IOException {
     ServerCommunicationChannel channel;

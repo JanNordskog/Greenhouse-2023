@@ -5,16 +5,19 @@ import no.ntnu.Message;
 import no.ntnu.message.OkMessage;
 import no.ntnu.server.ServerLogic;
 
+/**
+ * Command to request data.
+ */
 public class RequestDataCommand extends Command {
 
-    public RequestDataCommand() {}
+  public RequestDataCommand() {}
 
-    @Override
-    public Message execute(ServerLogic logic) {
-        logic.sendData();
-        return new OkMessage();
-    }
-    
-    
+  @Override
+  public Message execute(ServerLogic logic) {
+    logic.sendData();
+    return new OkMessage();
+  }
+
+
 
 }

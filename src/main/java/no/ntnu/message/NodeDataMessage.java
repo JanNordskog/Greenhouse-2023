@@ -6,27 +6,31 @@ import no.ntnu.greenhouse.ActuatorCollection;
 import no.ntnu.greenhouse.Sensor;
 import no.ntnu.greenhouse.SensorActuatorNode;
 
+/**
+ * Message containing node data.
+ */
 public class NodeDataMessage implements Message {
-    
-    private SensorActuatorNode node;
-    public NodeDataMessage(SensorActuatorNode node) {
-        this.node = node;
-    }
 
-    public SensorActuatorNode getNode() {
-        return this.node;
-    }
+  private SensorActuatorNode node;
 
-    public int getId() {
-        return this.node.getId();
-    }
+  public NodeDataMessage(SensorActuatorNode node) {
+    this.node = node;
+  }
 
-    public List<Sensor> getSensors() {
-        return this.node.getSensors();
-    }
+  public SensorActuatorNode getNode() {
+    return this.node;
+  }
 
-    public ActuatorCollection getActuators() {
-        return this.node.getActuators();
-    }
+  public int getId() {
+    return this.node.getId();
+  }
+
+  public List<Sensor> getSensors() {
+    return this.node.getSensors();
+  }
+
+  public ActuatorCollection getActuators() {
+    return this.node.getActuators();
+  }
 
 }

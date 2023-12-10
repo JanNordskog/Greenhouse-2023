@@ -19,7 +19,6 @@ import no.ntnu.gui.common.ActuatorPane;
 import no.ntnu.gui.common.SensorPane;
 import no.ntnu.listeners.common.CommunicationChannelListener;
 import no.ntnu.listeners.controlpanel.GreenhouseEventListener;
-import no.ntnu.run.ControlPanelStarter;
 import no.ntnu.server.ServerCommunicationChannel;
 import no.ntnu.server.ServerLogic;
 import no.ntnu.tools.Logger;
@@ -33,7 +32,6 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
   private static final int WIDTH = 500;
   private static final int HEIGHT = 400;
   private static ServerCommunicationChannel channel;
-  private static ControlPanelStarter starter;
 
   private TabPane nodeTabPane;
   private Scene mainScene;
@@ -50,13 +48,12 @@ public class ControlPanelApplication extends Application implements GreenhouseEv
    * @param logic   The logic of the control panel node
    * @param channel Communication channel for sending control commands and receiving events
    */
-  public static void startApp(ServerLogic logic, ServerCommunicationChannel channel, ControlPanelStarter starter) {
+  public static void startApp(ServerLogic logic, ServerCommunicationChannel channel) {
     if (logic == null) {
       throw new IllegalArgumentException("Control panel logic can't be null");
     }
     ControlPanelApplication.logic = logic;
     ControlPanelApplication.channel = channel;
-    ControlPanelApplication.starter = starter;
     Logger.info("Running control panel GUI...");
     launch();
   }

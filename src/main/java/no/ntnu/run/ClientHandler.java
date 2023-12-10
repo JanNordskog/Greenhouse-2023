@@ -10,9 +10,11 @@ import no.ntnu.Message;
 import no.ntnu.MessageSerializer;
 import no.ntnu.command.RequestDataCommand;
 import no.ntnu.greenhouse.GreenhouseSimulator;
-import no.ntnu.message.NodeDataMessage;
 import no.ntnu.tools.Logger;
 
+/**
+ * Server client handler.
+ */
 public class ClientHandler extends Thread {
 
   private Socket socket;
@@ -20,6 +22,13 @@ public class ClientHandler extends Thread {
   private PrintWriter socketWriter;
   private BufferedReader socketReader;
 
+  /**
+   * Server client handler.
+   *
+   * @param socket The server socket.
+   * @param server The server class.
+   * @throws IOException Exception.
+   */
   public ClientHandler(Socket socket, GreenhouseSimulator server) throws IOException {
     this.server = server;
     this.socket = socket;
@@ -48,7 +57,7 @@ public class ClientHandler extends Thread {
     server.clientDisconnected(this);
   }
 
-  public Command readClientRequest() {
+  private Command readClientRequest() {
     Message clientCommand = null;
     try {
       String clientRequest = socketReader.readLine();

@@ -61,11 +61,12 @@ public class GreenhouseSimulator {
 
   /**
    * Start a simulation of a greenhouse - all the sensor and actuator nodes inside it.
-   * @throws CertificateException
-   * @throws NoSuchAlgorithmException
-   * @throws KeyStoreException
-   * @throws KeyManagementException
-   * @throws UnrecoverableKeyException
+   *
+   * @throws CertificateException Exception.
+   * @throws NoSuchAlgorithmException Exception.
+   * @throws KeyStoreException Exception.
+   * @throws KeyManagementException Exception.
+   * @throws UnrecoverableKeyException Exception.
    */
   public void start() throws KeyManagementException, KeyStoreException,
       NoSuchAlgorithmException, CertificateException, UnrecoverableKeyException {
@@ -171,6 +172,11 @@ public class GreenhouseSimulator {
     return this.logic;
   }
 
+  /**
+   * Sends a response to all clients.
+   *
+   * @param response message to send to client.
+   */
   public void sendResponseToClients(Message response) {
     for (ClientHandler c : connectedClients) {
       c.sendToClient(response);

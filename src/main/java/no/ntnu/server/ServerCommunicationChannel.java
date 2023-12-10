@@ -2,14 +2,12 @@ package no.ntnu.server;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import no.ntnu.Message;
 import no.ntnu.MessageSerializer;
-import no.ntnu.command.ToggleActuatorCommand;
 import no.ntnu.controlpanel.CommunicationChannel;
 import no.ntnu.controlpanel.SensorActuatorNodeInfo;
 import no.ntnu.greenhouse.Actuator;
@@ -22,6 +20,9 @@ import no.ntnu.message.NodeDataMessage;
 import no.ntnu.tools.Logger;
 import no.ntnu.tools.Parser;
 
+/**
+ * Starts the communication channel to the server.
+ */
 public class ServerCommunicationChannel implements CommunicationChannel {
 
   private ServerLogic logic;

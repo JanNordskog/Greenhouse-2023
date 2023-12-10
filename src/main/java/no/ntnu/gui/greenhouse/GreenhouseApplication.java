@@ -24,7 +24,8 @@ public class GreenhouseApplication extends Application implements NodeStateListe
   private Stage mainStage;
 
   @Override
-  public void start(Stage mainStage) throws KeyManagementException, KeyStoreException, NoSuchAlgorithmException, CertificateException, UnrecoverableKeyException {
+  public void start(Stage mainStage) throws KeyManagementException, KeyStoreException,
+      NoSuchAlgorithmException, CertificateException, UnrecoverableKeyException {
     this.mainStage = mainStage;
     mainStage.setScene(new MainGreenhouseGuiWindow());
     mainStage.setMinWidth(MainGreenhouseGuiWindow.WIDTH);

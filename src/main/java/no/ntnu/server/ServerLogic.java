@@ -17,6 +17,9 @@ import no.ntnu.message.NodeDataMessage;
 import no.ntnu.run.ClientHandler;
 import no.ntnu.tools.Logger;
 
+/**
+ * The client logic to talk to the server.
+ */
 public class ServerLogic
     implements ActuatorListener, CommunicationChannelListener, GreenhouseEventListener {
 
@@ -32,7 +35,7 @@ public class ServerLogic
 
   /**
    * Returns the node with the given id. Returns null if no node is found.
-   * 
+   *
    * @param nodeId Id of wanted ndoe.
    * @return Returns the node with the given id. null if not found.
    */
@@ -46,7 +49,7 @@ public class ServerLogic
 
   /**
    * Gets all the nodes connected to the server.
-   * 
+   *
    * @return all the nodes connected to the server.
    */
   public Map<Integer, SensorActuatorNode> getNodes() {
@@ -57,6 +60,11 @@ public class ServerLogic
     return nodes.size();
   }
 
+  /**
+   * Adds a listener to the logic.
+   *
+   * @param listener listener to add.
+   */
   public void addListener(GreenhouseEventListener listener) {
     if (!listeners.contains(listener)) {
       listeners.add(listener);
@@ -106,18 +114,29 @@ public class ServerLogic
     listeners.forEach(l -> l.onActuatorStateChanged(nodeId, actuatorId, isOn));
   }
 
+  /**
+   * Starts the nodes.
+   */
   public void start() {
     for (SensorActuatorNode node : nodes.values()) {
       node.start(this);
     }
   }
 
+  /**
+   * Stops the nodes.
+   */
   public void stop() {
     for (SensorActuatorNode node : nodes.values()) {
       node.stop();
     }
   }
 
+  /**
+   * Subscribe to update lifecycles.
+   *
+   * @param listener Node state listener.
+   */
   public void subscribeToLifecycleUpdates(NodeStateListener listener) {
     for (SensorActuatorNode node : nodes.values()) {
       node.addStateListener(listener);
@@ -128,6 +147,9 @@ public class ServerLogic
     this.clients = clients;
   }
 
+  /**
+   * Sends data to the server.
+   */
   public void sendData() {
     for (ClientHandler c : this.clients) {
       for (SensorActuatorNode n : nodes.values()) {
