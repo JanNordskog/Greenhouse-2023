@@ -14,6 +14,6 @@ public class GreenhouseGuiStarter {
    *             use real socket communication.
    */
   public static void main(String[] args) {
-    GreenhouseApplication.startApp(false);
+    GreenhouseApplication.startApp();
   }
 }

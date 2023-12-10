@@ -82,6 +82,7 @@ public class ControlPanelStarter {
   public void start() throws KeyManagementException, NoSuchAlgorithmException,
       KeyStoreException, CertificateException, FileNotFoundException, IOException {
     ServerCommunicationChannel channel = initiateCommunication(this.logic);
+    logic.setCommunicationChannel(channel);
     channel.setNodes(nodes);
     sendCommand(new RequestDataCommand());
     this.requestNodeDataSchedule(2000);
@@ -107,7 +108,8 @@ public class ControlPanelStarter {
       Socket socket = con.client("localhost");
       this.socketWriter = new PrintWriter(socket.getOutputStream(), true);
       this.socketReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-      ServerCommunicationChannel channel = new ServerCommunicationChannel(this.logic, socketReader);
+      ServerCommunicationChannel channel = new ServerCommunicationChannel(this.logic,
+          socketReader, socketWriter);
       return channel;
     } catch (IOException e) {
       System.err.println("Could not connect to server " + e.getMessage());

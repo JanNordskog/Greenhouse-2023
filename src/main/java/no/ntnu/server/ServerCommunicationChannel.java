@@ -2,10 +2,12 @@ package no.ntnu.server;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.LinkedList;
 import java.util.List;
 import no.ntnu.Message;
 import no.ntnu.MessageSerializer;
+import no.ntnu.command.ToggleActuatorCommand;
 import no.ntnu.controlpanel.CommunicationChannel;
 import no.ntnu.controlpanel.SensorActuatorNodeInfo;
 import no.ntnu.greenhouse.Actuator;
@@ -25,17 +27,28 @@ public class ServerCommunicationChannel implements CommunicationChannel {
 
   private ServerLogic logic;
   private BufferedReader reader;
+  private PrintWriter writer;
   private List<SensorActuatorNode> nodes;
 
-  public ServerCommunicationChannel(ServerLogic logic, BufferedReader reader) {
+  /**
+   * Communication channel between client and server.
+   *
+   * @param logic Logic.
+   * @param reader Reader.
+   * @param writer Writer.
+   */
+  public ServerCommunicationChannel(ServerLogic logic, BufferedReader reader, PrintWriter writer) {
     this.reader = reader;
     this.logic = logic;
+    this.writer = writer;
   }
 
   @Override
   public void sendActuatorChange(int nodeId, int actuatorId, boolean isOn) {
-    Message msg = new ActuatorMessage(nodeId, actuatorId, isOn);
-    handleIncomingMessage(msg, nodes);
+    String state = isOn ? "ON" : "off";
+    Logger.info("Sending command to greenhouse: turn " + state + " actuator["
+        + actuatorId + "] on node " + nodeId);  
+    writer.println(MessageSerializer.toString(new ToggleActuatorCommand(nodeId, actuatorId)));
   }
 
   public void setNodes(List<SensorActuatorNode> nodes) {
@@ -54,7 +67,7 @@ public class ServerCommunicationChannel implements CommunicationChannel {
         if (reader != null) {
           String rawMessage = reader.readLine();
           if (rawMessage == null) {
-            break; // Exit loop if end of stream is reached
+            break;
           }
           Message msg = MessageSerializer.fromString(rawMessage);
           Logger.info("Received message: " + rawMessage);
@@ -65,7 +78,7 @@ public class ServerCommunicationChannel implements CommunicationChannel {
         }
       } catch (IOException e) {
         Logger.error("Error while receiving message: " + e.getMessage());
-        break; // Exit loop on IOException
+        break;
       } catch (Exception e) {
         Logger.error("Error processing message: " + e.getMessage());
       }

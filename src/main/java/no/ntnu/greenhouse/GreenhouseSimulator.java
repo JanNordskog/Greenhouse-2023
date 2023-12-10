@@ -24,7 +24,6 @@ import no.ntnu.tools.Logger;
 public class GreenhouseSimulator {
 
   private final List<PeriodicSwitch> periodicSwitches = new LinkedList<>();
-  private final boolean fake;
   private SSLServerSocket server;
   private ServerLogic logic;
   private boolean isServerRunning = false;
@@ -34,12 +33,8 @@ public class GreenhouseSimulator {
 
   /**
    * Create a greenhouse simulator.
-   *
-   * @param fake When true, simulate a fake periodic events instead of creating
-   *             socket communication
    */
-  public GreenhouseSimulator(boolean fake) {
-    this.fake = fake;
+  public GreenhouseSimulator() {
     this.logic = new ServerLogic();
   }
 
@@ -54,8 +49,8 @@ public class GreenhouseSimulator {
   }
 
   private void createNode(int temperature, int humidity, int windows, int fans, int heaters) {
-    SensorActuatorNode node = DeviceFactory.createNode(
-        temperature, humidity, windows, fans, heaters);
+    SensorActuatorNode node =
+        DeviceFactory.createNode(temperature, humidity, windows, fans, heaters);
     logic.addNode(node.getId(), node);
   }
 
@@ -68,8 +63,8 @@ public class GreenhouseSimulator {
    * @throws KeyManagementException Exception.
    * @throws UnrecoverableKeyException Exception.
    */
-  public void start() throws KeyManagementException, KeyStoreException,
-      NoSuchAlgorithmException, CertificateException, UnrecoverableKeyException {
+  public void start() throws KeyManagementException, KeyStoreException, NoSuchAlgorithmException,
+      CertificateException, UnrecoverableKeyException {
     initiateCommunication();
     logic.start();
     for (PeriodicSwitch periodicSwitch : periodicSwitches) {
@@ -80,11 +75,7 @@ public class GreenhouseSimulator {
 
   private void initiateCommunication() throws KeyManagementException, KeyStoreException,
       NoSuchAlgorithmException, CertificateException, UnrecoverableKeyException {
-    if (fake) {
-      initiateFakePeriodicSwitches();
-    } else {
-      initiateRealCommunication();
-    }
+    initiateRealCommunication();
   }
 
   private void initiateRealCommunication() {
@@ -104,13 +95,13 @@ public class GreenhouseSimulator {
             }
           }
         }
-  
-      } catch (IOException | KeyStoreException | UnrecoverableKeyException
-        | KeyManagementException | NoSuchAlgorithmException | CertificateException e) {
+
+      } catch (IOException | KeyStoreException | UnrecoverableKeyException | KeyManagementException
+          | NoSuchAlgorithmException | CertificateException e) {
         System.err.println("Could not open server: " + e.getMessage());
       }
     }).start();
-    
+
   }
 
   private ClientHandler acceptNextClientConnection(SSLServerSocket listeningSocket) {
@@ -126,11 +117,6 @@ public class GreenhouseSimulator {
     }
   }
 
-  private void initiateFakePeriodicSwitches() {
-    periodicSwitches.add(new PeriodicSwitch("Window DJ", logic.getNode(1), 2, 20000));
-    periodicSwitches.add(new PeriodicSwitch("Heater DJ", logic.getNode(2), 7, 8000));
-  }
-
   /**
    * Stop the simulation of the greenhouse - all the nodes in it.
    */
@@ -140,22 +126,15 @@ public class GreenhouseSimulator {
   }
 
   private void stopCommunication() {
-    if (fake) {
-      for (PeriodicSwitch periodicSwitch : periodicSwitches) {
-        periodicSwitch.stop();
+    try {
+      if (this.server != null) {
+        this.server.close();
+        this.server = null;
+        this.isServerRunning = false;
+        Logger.info("Stopping server");
       }
-      Logger.info("Stopped fake");
-    } else {
-      try {
-        if (this.server != null) {
-          this.server.close();
-          this.server = null;
-          this.isServerRunning = false;
-          Logger.info("Stopping server");
-        }
-      } catch (IOException e) {
-        System.err.println("Error closing: " + e.getMessage());
-      }
+    } catch (IOException e) {
+      System.err.println("Error closing: " + e.getMessage());
     }
   }
 

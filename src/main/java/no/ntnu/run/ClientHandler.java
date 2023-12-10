@@ -9,7 +9,10 @@ import no.ntnu.Command;
 import no.ntnu.Message;
 import no.ntnu.MessageSerializer;
 import no.ntnu.command.RequestDataCommand;
+import no.ntnu.command.ToggleActuatorCommand;
+import no.ntnu.greenhouse.Actuator;
 import no.ntnu.greenhouse.GreenhouseSimulator;
+import no.ntnu.greenhouse.SensorActuatorNode;
 import no.ntnu.tools.Logger;
 
 /**
@@ -65,6 +68,15 @@ public class ClientHandler extends Thread {
       if (clientCommand instanceof Command) {
         if (clientCommand instanceof RequestDataCommand) {
           server.getLogic().sendData();
+        } else if (clientCommand instanceof ToggleActuatorCommand tac) {
+          for (SensorActuatorNode san : server.getLogic().getNodes().values()) {
+            for (Actuator a : san.getActuators()) {
+              if (a.getId() - 1 == tac.getId()) {
+                a.toggle();
+                san.actuatorUpdated(san.getId(), a);
+              }
+            }
+          }
         }
       }
     } catch (IOException e) {

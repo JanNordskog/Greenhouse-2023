@@ -88,6 +88,9 @@ public class ServerLogic
     if (communicationChannel != null) {
       communicationChannel.sendActuatorChange(nodeId, actuator.getId(), actuator.isOn());
     }
+    listeners.forEach(listener -> {
+      listener.onActuatorStateChanged(nodeId, actuator.getId(), actuator.isOn());
+    });
   }
 
   public void setCommunicationChannel(CommunicationChannel channel) {

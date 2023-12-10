@@ -14,8 +14,6 @@ import no.ntnu.tools.Parser;
  * Serialized messages and commands sent and recieved.
  */
 public class MessageSerializer {
-  private static final String humidityUnit = "%";
-  private static final String temperatureUnit = "C";
   private static final String actuatorMessage = "M";
   private static final String closeNodeMessage = "N";
   private static final String SENSOR_NODE_INFO = "I";
@@ -71,7 +69,9 @@ public class MessageSerializer {
     System.out.println(s);
     if (s != null) {
       if (s.startsWith(actuatorCommand)) {
-        m = new ToggleActuatorCommand(parseInteger(s, 0), parseInteger(s, 1));
+        System.out.println("Incoming command for toggle actuator is now : " + s.substring(1));
+        m = new ToggleActuatorCommand(parseInteger(s.substring(1), 0),
+        parseInteger(s.substring(1), 1));
       } else if (s.startsWith(actuatorMessage)) {
         m = new ActuatorMessage(parseInteger(s, 0), parseInteger(s, 1), parseBoolean(s, 2));
       } else if (s.startsWith(closeNodeMessage)) {
@@ -143,33 +143,13 @@ public class MessageSerializer {
     return bool;
   }
 
-  private static boolean isUnitValid(String message) {
-    boolean valid = false;
-    if (message != null && message.length() > 0) {
-      String[] split = message.split(",");
-      char last = split[0].charAt(split[0].length() - 1);
-      if (last == humidityUnit.charAt(0) || last == temperatureUnit.charAt(0)) {
-        valid = true;
-      }
-    }
-
-    return valid;
-  }
-
   private static Integer parseInteger(String s, int position) {
-    Integer i = null;
-    String[] split;
-    if (isUnitValid(s)) {
-      split = s.substring(0, s.length() - 1).split(",");
-    } else {
-      split = s.substring(1).split(",");
-    }
+    String[] split = s.split(",");
     try {
-      Integer.valueOf(split[position]);
+      return Integer.valueOf(split[position]);
     } catch (Exception e) {
       System.err.println("Could not parse integer <" + s + ">");
+      return null;
     }
-
-    return i;
   }
 }
