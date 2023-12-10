@@ -3,6 +3,7 @@ package no.ntnu.run;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import no.ntnu.greenhouse.GreenhouseSimulator;
 import no.ntnu.tools.Logger;
@@ -21,8 +22,9 @@ public class CommandLineGreenhouse {
    * @throws NoSuchAlgorithmException
    * @throws KeyStoreException
    * @throws KeyManagementException
+   * @throws UnrecoverableKeyException
    */
-  public static void main(String[] args) throws KeyManagementException, KeyStoreException, NoSuchAlgorithmException, CertificateException {
+  public static void main(String[] args) throws KeyManagementException, KeyStoreException, NoSuchAlgorithmException, CertificateException, UnrecoverableKeyException {
     Logger.info("Running greenhouse simulator in command line (without GUI)...");
     boolean fake = false;
     if (args.length == 1 && "fake".equals(args[0])) {

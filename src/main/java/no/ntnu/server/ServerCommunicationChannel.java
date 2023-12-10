@@ -2,7 +2,6 @@ package no.ntnu.server;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Timer;
@@ -17,8 +16,6 @@ import no.ntnu.greenhouse.SensorActuatorNode;
 import no.ntnu.greenhouse.SensorReading;
 import no.ntnu.message.ActuatorMessage;
 import no.ntnu.message.CloseNodeMessage;
-import no.ntnu.message.HumidityMessage;
-import no.ntnu.message.TemperatureMessage;
 import no.ntnu.tools.Parser;
 
 public class ServerCommunicationChannel implements CommunicationChannel {
@@ -28,7 +25,6 @@ public class ServerCommunicationChannel implements CommunicationChannel {
 
 
     public ServerCommunicationChannel(ServerLogic logic, BufferedReader reader) {
-        this.logic = logic;
         this.reader = reader;
     }
 
@@ -62,15 +58,7 @@ public class ServerCommunicationChannel implements CommunicationChannel {
     }
 
     private void handleIncomingMessage(Message msg) {
-        if (msg instanceof HumidityMessage humidityMessage) {
-            ArrayList<SensorReading> reading = new ArrayList<>();
-            reading.add(new SensorReading("humidity", humidityMessage.getHumidity(), "%"));
-            logic.onSensorData(humidityMessage.getNodeId(), reading);
-        } else if (msg instanceof TemperatureMessage temperatureMessage) {
-            ArrayList<SensorReading> reading = new ArrayList<>();
-            reading.add(new SensorReading("temperature", temperatureMessage.getTemperature(), "C"));
-            logic.onSensorData(temperatureMessage.getNodeId(), reading);
-        } else if (msg instanceof ToggleActuatorCommand toggleActuatorCommand) {
+        if (msg instanceof ToggleActuatorCommand toggleActuatorCommand) {
             toggleActuatorCommand.execute(logic);
             logic.onActuatorStateChanged(toggleActuatorCommand.getNodeId(),
                     toggleActuatorCommand.getId(), toggleActuatorCommand.isOn(logic));
@@ -78,8 +66,8 @@ public class ServerCommunicationChannel implements CommunicationChannel {
             logic.onActuatorStateChanged(actuatorMessage.getNodeId(),
                     actuatorMessage.getActuatorId(), actuatorMessage.isOn());
         } else if (msg instanceof CloseNodeMessage nodeMessage) {
-            for (SensorActuatorNode s : logic.nodes) {
-                logic.getNodes().remove(logic.getNode(s.getId()));
+            for (SensorActuatorNode s : logic.getNodes().values()) {
+                logic.getNodes().remove(s.getId());
             }
         }
     }

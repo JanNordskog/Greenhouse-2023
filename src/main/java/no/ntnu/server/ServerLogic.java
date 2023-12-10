@@ -1,8 +1,9 @@
 package no.ntnu.server;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import no.ntnu.controlpanel.CommunicationChannel;
 import no.ntnu.controlpanel.SensorActuatorNodeInfo;
 import no.ntnu.greenhouse.Actuator;
@@ -11,14 +12,18 @@ import no.ntnu.greenhouse.SensorReading;
 import no.ntnu.listeners.common.ActuatorListener;
 import no.ntnu.listeners.common.CommunicationChannelListener;
 import no.ntnu.listeners.controlpanel.GreenhouseEventListener;
+import no.ntnu.listeners.greenhouse.NodeStateListener;
+import no.ntnu.message.NodeDataMessage;
+import no.ntnu.run.ClientHandler;
 import no.ntnu.tools.Logger;
 
 public class ServerLogic implements ActuatorListener, CommunicationChannelListener, GreenhouseEventListener {
     
     private final List<GreenhouseEventListener> listeners = new LinkedList<>();
-    List<SensorActuatorNode> nodes = new ArrayList<>();
+    private final Map<Integer, SensorActuatorNode> nodes = new HashMap<>();
     private CommunicationChannel communicationChannel;
     private CommunicationChannelListener channelListener;
+    private List<ClientHandler> clients;
 
     public ServerLogic() {
 
@@ -31,26 +36,18 @@ public class ServerLogic implements ActuatorListener, CommunicationChannelListen
      * @return Returns the node with the given id. null if not found.
      */
     public SensorActuatorNode getNode(int nodeId) {
-        SensorActuatorNode node = null;
-        for (SensorActuatorNode san : nodes) {
-            if (san.getId() == nodeId) {
-                node = san;
-            }
-        }
-
-        return node;
+        return nodes.get(nodeId);
     }
 
-    public void addNode(SensorActuatorNode node) {
-        if (!nodes.contains(node))
-                nodes.add(node);
+    public void addNode(int nodeId, SensorActuatorNode node) {
+        nodes.put(nodeId, node);
     }
 
     /**
      * Gets all the nodes connected to the server.
      * @return all the nodes connected to the server.
      */
-    public List<SensorActuatorNode> getNodes() {
+    public Map<Integer, SensorActuatorNode> getNodes() {
         return nodes;
     }
 
@@ -105,6 +102,37 @@ public class ServerLogic implements ActuatorListener, CommunicationChannelListen
     @Override
     public void onActuatorStateChanged(int nodeId, int actuatorId, boolean isOn) {
         listeners.forEach(l -> l.onActuatorStateChanged(nodeId, actuatorId, isOn));
+    }
+
+    public void start() {
+        for (SensorActuatorNode node : nodes.values()) {
+            node.start(this);
+          }
+    }
+
+    public void stop() {
+        for (SensorActuatorNode node : nodes.values()) {
+            node.stop();
+          }
+    }
+
+    public void subscribeToLifecycleUpdates(NodeStateListener listener) {
+        for (SensorActuatorNode node : nodes.values()) {
+            node.addStateListener(listener);
+        }
+    }
+
+    public void setClientHandlers(List<ClientHandler> clients) {
+        this.clients = clients;
+    }
+
+    public void sendData() {
+        for (ClientHandler c : this.clients) {
+            for (SensorActuatorNode n : nodes.values()) {
+                NodeDataMessage msg = new NodeDataMessage(n);
+                c.sendToClient(msg);
+            }
+        }
     }
 
 }
