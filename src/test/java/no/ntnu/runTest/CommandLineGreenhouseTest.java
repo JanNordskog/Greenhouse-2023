@@ -1,4 +1,5 @@
-package runTest;
+package no.ntnu.runTest;
 
 public class CommandLineGreenhouseTest {
+
 }
