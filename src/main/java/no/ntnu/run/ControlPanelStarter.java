@@ -1,6 +1,6 @@
 package no.ntnu.run;
 
-import static no.ntnu.server.Server.PORT_NUMBER;
+import static no.ntnu.greenhouse.GreenhouseSimulator.PORT_NUMBER;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -12,11 +12,21 @@ import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
+import no.ntnu.Command;
 import no.ntnu.Message;
 import no.ntnu.MessageSerializer;
-import no.ntnu.controlpanel.CommunicationChannel;
-import no.ntnu.controlpanel.FakeCommunicationChannel;
+import no.ntnu.command.RequestDataCommand;
+import no.ntnu.greenhouse.Actuator;
+import no.ntnu.greenhouse.Sensor;
+import no.ntnu.greenhouse.SensorActuatorNode;
 import no.ntnu.gui.controlpanel.ControlPanelApplication;
+import no.ntnu.message.ActuatorMessage;
+import no.ntnu.message.CloseNodeMessage;
+import no.ntnu.message.NodeDataMessage;
 import no.ntnu.server.ServerCommunicationChannel;
 import no.ntnu.server.ServerLogic;
 import no.ntnu.ssl.SslConnection;
@@ -33,10 +43,12 @@ public class ControlPanelStarter {
   private ServerLogic logic;
   private PrintWriter socketWriter;
   private BufferedReader socketReader;
+  private List<SensorActuatorNode> nodes;
 
   public ControlPanelStarter(boolean fake, ServerLogic logic) {
     this.fake = fake;
     this.logic = logic;
+    this.nodes = new ArrayList<>();
   }
 
   /**
@@ -52,59 +64,41 @@ public class ControlPanelStarter {
    * @throws NoSuchAlgorithmException
    * @throws KeyManagementException
    */
-  public static void main(String[] args) throws KeyManagementException, NoSuchAlgorithmException, KeyStoreException, CertificateException, FileNotFoundException, IOException {
-    boolean fake = false;
-    if (args.length == 1 && "fake".equals(args[0])) {
-      fake = true;
-      Logger.info("Using FAKE events");
-    }
+  public static void main(String[] args) throws KeyManagementException, NoSuchAlgorithmException,
+      KeyStoreException, CertificateException, FileNotFoundException, IOException {
     ServerLogic logic = new ServerLogic();
     ControlPanelStarter starter = new ControlPanelStarter(false, logic);
     starter.start();
   }
 
-  public void start() throws KeyManagementException, NoSuchAlgorithmException, KeyStoreException, CertificateException, FileNotFoundException, IOException {
-    CommunicationChannel channel = initiateCommunication(logic, fake);
-    ControlPanelApplication.startApp(logic, channel);
+  public void start() throws KeyManagementException, NoSuchAlgorithmException,
+      KeyStoreException, CertificateException, FileNotFoundException, IOException {
+    ServerCommunicationChannel channel = initiateCommunication(logic, fake);
+    sendCommand(new RequestDataCommand());
+    this.requestNodeDataSchedule(2000);
+    ControlPanelApplication.startApp(logic, channel, this);
     // This code is reached only after the GUI-window is closed
     Logger.info("Exiting the control panel application");
     stopCommunication();
   }
 
-  private CommunicationChannel initiateCommunication(ServerLogic logic, boolean fake) throws KeyManagementException, NoSuchAlgorithmException, KeyStoreException, CertificateException, FileNotFoundException, IOException {
-    CommunicationChannel channel;
-    if (fake) {
-      channel = initiateFakeSpawner(logic);
-    } else {
-      channel = initiateSocketCommunication(logic);
-    }
+  private ServerCommunicationChannel initiateCommunication(ServerLogic logic, boolean fake)
+      throws KeyManagementException, NoSuchAlgorithmException, KeyStoreException,
+      CertificateException, FileNotFoundException, IOException {
+    ServerCommunicationChannel channel;
+    channel = initiateSocketCommunication(logic);
     return channel;
   }
 
-  private CommunicationChannel initiateSocketCommunication(ServerLogic logic) throws KeyManagementException, NoSuchAlgorithmException, KeyStoreException, CertificateException, FileNotFoundException, IOException {
+  private ServerCommunicationChannel initiateSocketCommunication(ServerLogic logic)
+      throws KeyManagementException, NoSuchAlgorithmException,
+      KeyStoreException, CertificateException, FileNotFoundException, IOException {
     try {
       SslConnection con = new SslConnection(PORT_NUMBER);
       Socket socket = con.client("localhost");
       this.socketWriter = new PrintWriter(socket.getOutputStream(), true);
       this.socketReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
       ServerCommunicationChannel channel = new ServerCommunicationChannel(logic, socketReader);
-      final int START_DELAY = 5;
-      channel.spawnNode("4;3-window", START_DELAY);
-      channel.spawnNode("1", START_DELAY + 1);
-      channel.spawnNode("1", START_DELAY + 2);
-      channel.advertiseSensorData("4;temperature=27.4 °C,temperature=26.8 °C,humidity=80 %", START_DELAY + 2);
-      channel.spawnNode("8;2-heater", START_DELAY + 3);
-      channel.advertiseActuatorState(4, 1, true, START_DELAY + 3);
-      channel.advertiseActuatorState(4, 1, false, START_DELAY + 4);
-      channel.advertiseActuatorState(4, 1, true, START_DELAY + 5);
-      channel.advertiseActuatorState(4, 2, true, START_DELAY + 5);
-      channel.advertiseActuatorState(4, 1, false, START_DELAY + 6);
-      channel.advertiseActuatorState(4, 2, false, START_DELAY + 6);
-      channel.advertiseActuatorState(4, 1, true, START_DELAY + 7);
-      channel.advertiseActuatorState(4, 2, true, START_DELAY + 8);
-      channel.advertiseSensorData("4;temperature=22.4 °C,temperature=26.0 °C,humidity=81 %", START_DELAY + 9);
-      channel.advertiseSensorData("1;humidity=80 %,humidity=82 %", START_DELAY + 10);
-      channel.advertiseRemovedNode(4, START_DELAY + 11);
       return channel;
     } catch (IOException e) {
       System.err.println("Could not connect to server " + e.getMessage());
@@ -112,32 +106,29 @@ public class ControlPanelStarter {
     }
   }
 
-  private CommunicationChannel initiateFakeSpawner(ServerLogic logic) {
-    // Here we pretend that some events will be received with a given delay
-    FakeCommunicationChannel spawner = new FakeCommunicationChannel(logic);
-    logic.setCommunicationChannel(spawner);
-    final int START_DELAY = 5;
-    spawner.spawnNode("4;3_window", START_DELAY);
-    spawner.spawnNode("1", START_DELAY + 1);
-    spawner.spawnNode("1", START_DELAY + 2);
-    spawner.advertiseSensorData("4;temperature=27.4 °C,temperature=26.8 °C,humidity=80 %", START_DELAY + 2);
-    spawner.spawnNode("8;2_heater", START_DELAY + 3);
-    spawner.advertiseActuatorState(4, 1, true, START_DELAY + 3);
-    spawner.advertiseActuatorState(4, 1, false, START_DELAY + 4);
-    spawner.advertiseActuatorState(4, 1, true, START_DELAY + 5);
-    spawner.advertiseActuatorState(4, 2, true, START_DELAY + 5);
-    spawner.advertiseActuatorState(4, 1, false, START_DELAY + 6);
-    spawner.advertiseActuatorState(4, 2, false, START_DELAY + 6);
-    spawner.advertiseActuatorState(4, 1, true, START_DELAY + 7);
-    spawner.advertiseActuatorState(4, 2, true, START_DELAY + 8);
-    spawner.advertiseSensorData("4;temperature=22.4 °C,temperature=26.0 °C,humidity=81 %", START_DELAY + 9);
-    spawner.advertiseSensorData("1;humidity=80 %,humidity=82 %", START_DELAY + 10);
-    spawner.advertiseRemovedNode(8, START_DELAY + 11);
-    spawner.advertiseRemovedNode(8, START_DELAY + 12);
-    spawner.advertiseSensorData("1;temperature=25.4 °C,temperature=27.0 °C,humidity=67 %", START_DELAY + 13);
-    spawner.advertiseSensorData("4;temperature=25.4 °C,temperature=27.0 °C,humidity=82 %", START_DELAY + 14);
-    spawner.advertiseSensorData("4;temperature=25.4 °C,temperature=27.0 °C,humidity=82 %", START_DELAY + 16);
-    return spawner;
+  public void startListeningThread(ServerCommunicationChannel channel) {
+    new Thread(() -> {
+      Message msg = null;
+      do {
+        try {
+          String rawMessage = socketReader.readLine();
+          msg = MessageSerializer.fromString(rawMessage);
+          handleIncomingMessage(msg, channel);
+        } catch (IOException e) {
+          System.err.println("Could not read message: " + e.getMessage());
+        }
+      } while (msg != null);
+    });
+  }
+
+  private void requestNodeDataSchedule(int delay) {
+    Timer timer = new Timer();
+    timer.scheduleAtFixedRate(new TimerTask() {
+      @Override
+      public void run() {
+        sendCommand(new RequestDataCommand());
+      }
+    }, delay, delay);
   }
 
   private void stopCommunication() {
@@ -153,11 +144,42 @@ public class ControlPanelStarter {
     }
   }
 
-  public boolean sendMessage(Message message) {
+  private void handleIncomingMessage(Message message, ServerCommunicationChannel channel) {
+    if (message instanceof NodeDataMessage nodeData) {
+      SensorActuatorNode node = nodeData.getNode();
+      boolean nodeExist = false;
+      for (SensorActuatorNode san : nodes) {
+        if (san.getId() == nodeData.getId()) {
+          nodeExist = true;
+        }
+      }
+      String nodeString = nodeData.getId() + ";";
+
+      for (Actuator a : nodeData.getActuators()) {
+        nodeString += a.getId() + ",";
+      }
+      for (Sensor s : nodeData.getSensors()) {
+        nodeString += s.getType() + "="
+          + s.getReading().getValue() + " "
+          + s.getReading().getUnit();
+      }
+      if (!nodeExist) {
+        nodes.add(node);
+        channel.spawnNode(nodeString, 0);
+      }
+      channel.advertiseSensorData(nodeString, 0);
+    } else if (message instanceof ActuatorMessage am) {
+      channel.advertiseActuatorState(am.getNodeId(), am.getActuatorId(), am.isOn(), 0);
+    } else if (message instanceof CloseNodeMessage cnm) {
+      channel.advertiseRemovedNode(cnm.getNodeId(), 0);
+    }
+  }
+
+  private boolean sendCommand(Command command) {
     boolean sent = false;
 
     try {
-      socketWriter.println(MessageSerializer.toString(message));
+      socketWriter.println(MessageSerializer.toString(command));
       sent = true;
     } catch (Exception e) {
       System.err.println("Could not send message: " + e.getMessage());
