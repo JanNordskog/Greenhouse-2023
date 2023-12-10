@@ -214,14 +214,13 @@ public class ServerCommunicationChannel implements CommunicationChannel {
     if (actuatorInfo.length != 2) {
       throw new IllegalArgumentException("Invalid actuator info format: " + s);
     }
-    int actuatorCount =
-        Parser.parseIntegerOrError(actuatorInfo[0], "Invalid actuator count: " + actuatorInfo[0]);
+    int actuatorId =
+        Parser.parseIntegerOrError(actuatorInfo[0],
+        "Invalid actuator count: " + actuatorInfo[0]) - 1;
     String actuatorType = actuatorInfo[1];
-    for (int i = 0; i < actuatorCount; i++) {
-      Actuator actuator = new Actuator(actuatorType, info.getId());
-      actuator.setListener(logic);
-      info.addActuator(actuator);
-    }
+    Actuator actuator = new Actuator(actuatorId, actuatorType, info.getId());
+    actuator.setListener(logic);
+    info.addActuator(actuator);
   }
 
   private SensorReading parseReading(String reading) {
