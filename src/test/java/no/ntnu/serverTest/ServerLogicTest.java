@@ -41,5 +41,13 @@ public class ServerLogicTest {
     verify(mockListener, times(1)).onNodeAdded(any());
   }
 
+  @Test
+  public void testOnNodeRemoved() {
+    serverLogic.addListener(mockListener);
+    int nodeId = 1;
+    serverLogic.onNodeRemoved(nodeId);
+    verify(mockListener, times(1)).onNodeRemoved(eq(nodeId));
+  }
+
 
 }
