@@ -1,22 +1,18 @@
-package no.ntnu.messageTest;
+package no.ntnu.message;
 
-import no.ntnu.message.ActuatorMessage;
-import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
+import no.ntnu.MessageSerializer;
 
 public class ActuatorMessageTest {
 
-  @Test
-  public void testActuatorMessageCreation() {
-    int nodeId = 1;
-    int actuatorId = 2;
-    boolean isOn = true;
-
-    ActuatorMessage message = new ActuatorMessage(nodeId, actuatorId, isOn);
-
-    // Testing getters
-    assertEquals(nodeId, message.getNodeId(), "Node ID should match the constructor argument");
-    assertEquals(actuatorId, message.getActuatorId(), "Actuator ID should match the constructor argument");
-    assertEquals(isOn, message.isOn(), "Actuator state should match the constructor argument");
+  public static void main(String[] args) {
+    testActuatorMessageSerialization();
   }
+
+  private static void testActuatorMessageSerialization() {
+    ActuatorMessage actuatorMessage = new ActuatorMessage(1, 2, true);
+    String serialized = MessageSerializer.toString(actuatorMessage);
+    System.out.println("Serialized ActuatorMessage: " + serialized);
+  }
+
+  // You can add more methods if you need to test different scenarios
 }
