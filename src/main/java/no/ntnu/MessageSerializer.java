@@ -102,7 +102,9 @@ public class MessageSerializer {
     for (String s : containers) {
       if (s.contains("_")) {
         String[] actuatorParts = s.split("_");
-        Actuator a = new Actuator(actuatorParts[1], nodeId);
+        Actuator a = new Actuator(Parser.parseIntegerOrError(actuatorParts[0], 
+            "Could not parse actuator ID"),
+            actuatorParts[1], nodeId);
         node.addActuator(a);
       } else if (s.contains("=")) {
         String[] sensorParts = s.split("=");

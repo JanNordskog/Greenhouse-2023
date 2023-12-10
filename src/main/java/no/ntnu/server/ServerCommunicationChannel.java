@@ -103,7 +103,12 @@ public class ServerCommunicationChannel implements CommunicationChannel {
       } else {
 
         for (Actuator a : nodeData.getActuators()) {
-          advertiseActuatorState(a.getNodeId(), a.getId(), a.isOn(), 0);
+          Logger.info("Node id: " + a.getNodeId() + ", Actuator id: "
+              + a.getId() + ", Is on: " + a.isOn()
+              + ", Type: " + a.getType());
+          if (nodeData.getActuators().get(a.getId()) != null) {
+            advertiseActuatorState(a.getNodeId(), a.getId(), a.isOn(), 0);
+          }
         }
       }
 
