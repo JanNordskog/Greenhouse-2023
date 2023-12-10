@@ -1,143 +1,201 @@
 package no.ntnu;
 
+import no.ntnu.command.RequestDataCommand;
 import no.ntnu.command.ToggleActuatorCommand;
+import no.ntnu.greenhouse.Actuator;
+import no.ntnu.greenhouse.Sensor;
+import no.ntnu.greenhouse.SensorActuatorNode;
 import no.ntnu.message.ActuatorMessage;
 import no.ntnu.message.CloseNodeMessage;
-import no.ntnu.message.HumidityMessage;
-import no.ntnu.message.TemperatureMessage;
+import no.ntnu.message.NodeDataMessage;
+import no.ntnu.tools.Parser;
 
+/**
+ * Serialized messages and commands sent and recieved.
+ */
 public class MessageSerializer {
-    private final static String humidityUnit = "%";
-    private final static String temperatureUnit = "C";
-    private final static String actuatorCommand = "A";
-    private final static String actuatorMessage = "M";
-    private final static String closeNodeMessage = "N";
+  private static final String humidityUnit = "%";
+  private static final String temperatureUnit = "C";
+  private static final String actuatorMessage = "M";
+  private static final String closeNodeMessage = "N";
+  private static final String SENSOR_NODE_INFO = "I";
+
+  private static final String actuatorCommand = "A";
+  private static final String requestDataCommand = "R";
 
 
-    private MessageSerializer() {}
+  private MessageSerializer() {}
 
-    public static String toString(Message message) {
-        String m = "";
-        if (message instanceof HumidityMessage humidityMessage) {
-            m = humidityMessage.getHumidity() + "%," + humidityMessage.getNodeId();
-        } else if (message instanceof ToggleActuatorCommand toggleActuatorCommand) {
-            m = actuatorCommand + toggleActuatorCommand.getNodeId() + ","
-                    + toggleActuatorCommand.getId();
-        } else if (message instanceof TemperatureMessage temperatureMessage) {
-            m = temperatureMessage.getTemperature() + "C," + temperatureMessage.getNodeId();
-        } else if (message instanceof ActuatorMessage aMessage) {
-            m = actuatorMessage + aMessage.getNodeId() + "," + aMessage.getActuatorId() + ","
-                    + aMessage.isOn();
-        } else if (message instanceof CloseNodeMessage nodeMessage) {
-            m = closeNodeMessage + nodeMessage.getNodeId();
-        }
+  /**
+   * Turns a incoming message to its respected String format.
+   *
+   * @param message The message to turn into a string.
+   * @return The message string.
+   */
+  public static String toString(Message message) {
+    String m = "";
+    if (message instanceof RequestDataCommand) {
+      m = requestDataCommand;
+    } else if (message instanceof NodeDataMessage nodeData) {
+      String holder = nodeData.getId() + ";";
+      for (Actuator a : nodeData.getActuators()) {
+        holder += a.getId() + "_" + a.getType() + ",";
+      }
 
-        return m;
+      for (Sensor s : nodeData.getSensors()) {
+        holder += s.getType() + "=" + s.getReading().getValue() + ",";
+      }
+
+      holder = holder.substring(0, holder.length() - 1);
+
+      m = holder;
+    } else if (message instanceof ToggleActuatorCommand ac) {
+      m = actuatorCommand + ac.getNodeId() + "," + ac.getId();
+    } else if (message instanceof ActuatorMessage am) {
+      m = actuatorMessage + am.getNodeId() + "," + am.getActuatorId() + "," + am.isOn();
     }
 
-    public static Message fromString(String s) {
-        Message m = null;
 
-        System.out.println(s);
-        if (s != null) {
-            if (isUnitValid(s)) {
-                switch (getUnit(s)) {
-                    case '%':
-                        m = new HumidityMessage(parseDouble(s, 0), parseInteger(s, 1));
-                        break;
-                    case 'C':
-                        m = new TemperatureMessage(parseDouble(s, 0), parseInteger(s, 1));
-                }
-            } else {
-                if (s.startsWith(actuatorCommand)) {
-                    m = new ToggleActuatorCommand(parseInteger(s, 0), parseInteger(s, 1));
-                } else if (s.startsWith(actuatorCommand)) {
-                    m = new ActuatorMessage(parseInteger(s, 0), parseInteger(s, 1),
-                            parseBoolean(s, 2));
-                } else if (s.startsWith(closeNodeMessage)) {
-                    m = new CloseNodeMessage(parseInteger(s, 0));
-                } else {
-                    m = null;
-                }
-            }
-        }
+    return m;
+  }
 
-        return m;
+  public static Message fromString(String s) {
+    Message m = null;
+
+    System.out.println(s);
+    if (s != null) {
+      if (s.startsWith(actuatorCommand)) {
+        m = new ToggleActuatorCommand(parseInteger(s, 0), parseInteger(s, 1));
+      } else if (s.startsWith(actuatorMessage)) {
+        m = new ActuatorMessage(parseInteger(s, 0), parseInteger(s, 1), parseBoolean(s, 2));
+      } else if (s.startsWith(closeNodeMessage)) {
+        m = new CloseNodeMessage(parseInteger(s, 0));
+      } else if (s.startsWith(requestDataCommand)) {
+        m = new RequestDataCommand();
+      } else if (s.startsWith(SENSOR_NODE_INFO)) {
+        m = new NodeDataMessage(parseSensorFromData(s.substring(1)));
+      }
     }
 
-    private static boolean parseBoolean(String s, int position) {
-        boolean bool = false;
+    return m;
+  }
 
-        String[] split = s.split(",");
-        try {
-            bool = Boolean.parseBoolean(split[position]);
-        } catch (Exception e) {
-            System.err.println("Could not find boolean in <" + s + ">");
-        }
+  /**
+   * Makes a node from information in string format and returns the node.
+   *
+   * @param nodeInformation Information about a node in string format.
+   * @return returns a node.
+   */
+  public static SensorActuatorNode parseSensorFromData(String nodeInformation) {
+    String[] parts = nodeInformation.split(";");
 
-        return bool;
-    }
-
-    private static boolean isUnitValid(String message) {
-        boolean valid = false;
-        if (message != null) {
-            String[] split = message.split(",");
-            char last = split[0].charAt(message.length() - 1);
-            if (last == humidityUnit.charAt(0) || last == temperatureUnit.charAt(0))
-                valid = true;
-        }
-
-        return valid;
-    }
-
-    public static char getUnit(String message) {
-        char c = 0;
-
-        if (isUnitValid(message)) {
-            c = message.charAt(message.length() - 1);
-        }
-
-        return c;
-    }
-
-    public static double parseDouble(String s, int position) {
-        String[] split = s.substring(0, s.length() - 1).split(",");
-        double value = 0;
-        try {
-            value = Double.valueOf(split[position]);
-        } catch (NumberFormatException e) {
-            System.err.println("Could not parse String <" + s + "> to double");
-        }
-        return value;
-    }
-
-    private static Integer parseInteger(String s, int position) {
-        Integer i = null;
-        String[] split;
-        if (isUnitValid(s)) {
-            split = s.substring(0, s.length() - 1).split(",");
+    Integer nodeId =
+        Parser.parseIntegerOrError(parts[0], "Could not find in for node :" + parts[0]);
+    String[] containers = parts[1].split(",");
+    SensorActuatorNode node = new SensorActuatorNode(nodeId);
+    for (String s : containers) {
+      if (s.contains("_")) {
+        String[] actuatorParts = s.split("_");
+        Actuator a = new Actuator(actuatorParts[1], nodeId);
+        node.addActuator(a);
+      } else if (s.contains("=")) {
+        String[] sensorParts = s.split("=");
+        Sensor sen = null;
+        if (sensorParts[0].equalsIgnoreCase("temperature")) {
+          sen = new Sensor(sensorParts[0], 15, 40,
+              Parser.parseDoubleOrError(sensorParts[1], "Could not parse temperature"), "C");
+        } else if (sensorParts[0].equalsIgnoreCase("humidity")) {
+          sen = new Sensor(sensorParts[0], 50, 100,
+              Parser.parseDoubleOrError(sensorParts[1], "Could not parse humidity"), "%");
         } else {
-            split = s.substring(1).split(",");
-        }
-        try {
-            Integer.valueOf(split[position]);
-        } catch (Exception e) {
-            System.err.println("Could not parse integer <" + s + ">");
+          throw new IllegalArgumentException("Sensor not recognised");
         }
 
-        return i;
+        node.addSensors(sen, 1);
+
+      } else {
+        throw new IllegalArgumentException(
+            "Incorrect information format <" + nodeInformation + ">");
+      }
     }
 
-    public static Message ParseParameterizedMessage(String s) {
-        Message m = null;
+    return node;
+  }
 
-        String parameter = s.substring(1);
-        if (s.startsWith(actuatorCommand)) {
-            Integer nodeId = parseInteger(parameter, 0);
-            Integer actuatorId = parseInteger(parameter, 1);
-            m = new ToggleActuatorCommand(nodeId, actuatorId);
-        }
+  private static boolean parseBoolean(String s, int position) {
+    boolean bool = false;
 
-        return m;
+    String[] split = s.split(",");
+    try {
+      bool = Boolean.parseBoolean(split[position]);
+    } catch (Exception e) {
+      System.err.println("Could not find boolean in <" + s + ">");
     }
+
+    return bool;
+  }
+
+  private static boolean isUnitValid(String message) {
+    boolean valid = false;
+    if (message != null && message.length() > 0) {
+      String[] split = message.split(",");
+      char last = split[0].charAt(split[0].length() - 1);
+      if (last == humidityUnit.charAt(0) || last == temperatureUnit.charAt(0)) {
+        valid = true;
+      }
+    }
+
+    return valid;
+  }
+
+  public static char getUnit(String message) {
+    char c = 0;
+
+    if (isUnitValid(message)) {
+      c = message.charAt(message.length() - 1);
+    }
+
+    return c;
+  }
+
+  public static double parseDouble(String s, int position) {
+    String[] split = s.substring(0, s.length() - 1).split(",");
+    double value = 0;
+    try {
+      value = Double.valueOf(split[position]);
+    } catch (NumberFormatException e) {
+      System.err.println("Could not parse String <" + s + "> to double");
+    }
+    return value;
+  }
+
+  private static Integer parseInteger(String s, int position) {
+    Integer i = null;
+    String[] split;
+    if (isUnitValid(s)) {
+      split = s.substring(0, s.length() - 1).split(",");
+    } else {
+      split = s.substring(1).split(",");
+    }
+    try {
+      Integer.valueOf(split[position]);
+    } catch (Exception e) {
+      System.err.println("Could not parse integer <" + s + ">");
+    }
+
+    return i;
+  }
+
+  public static Message ParseParameterizedMessage(String s) {
+    Message m = null;
+
+    String parameter = s.substring(1);
+    if (s.startsWith(actuatorCommand)) {
+      Integer nodeId = parseInteger(parameter, 0);
+      Integer actuatorId = parseInteger(parameter, 1);
+      m = new ToggleActuatorCommand(nodeId, actuatorId);
+    }
+
+    return m;
+  }
 }

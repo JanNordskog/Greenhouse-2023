@@ -1,22 +1,20 @@
 package no.ntnu.greenhouse;
 
-import static no.ntnu.server.Server.PORT_NUMBER;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.net.Socket;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
+import javax.net.ssl.SSLServerSocket;
 import no.ntnu.Message;
-import no.ntnu.MessageSerializer;
 import no.ntnu.listeners.greenhouse.NodeStateListener;
+import no.ntnu.run.ClientHandler;
+import no.ntnu.server.ServerLogic;
 import no.ntnu.ssl.SslConnection;
 import no.ntnu.tools.Logger;
 
@@ -24,13 +22,15 @@ import no.ntnu.tools.Logger;
  * Application entrypoint - a simulator for a greenhouse.
  */
 public class GreenhouseSimulator {
-  private final Map<Integer, SensorActuatorNode> nodes = new HashMap<>();
 
   private final List<PeriodicSwitch> periodicSwitches = new LinkedList<>();
   private final boolean fake;
-  private PrintWriter socketWriter;
-  private BufferedReader socketReader;
-  private Socket socket;
+  private SSLServerSocket server;
+  private ServerLogic logic;
+  private boolean isServerRunning = false;
+  private List<ClientHandler> connectedClients = new ArrayList<>();
+
+  public static final int PORT_NUMBER = 1002;
 
   /**
    * Create a greenhouse simulator.
@@ -40,6 +40,7 @@ public class GreenhouseSimulator {
    */
   public GreenhouseSimulator(boolean fake) {
     this.fake = fake;
+    this.logic = new ServerLogic();
   }
 
   /**
@@ -55,7 +56,7 @@ public class GreenhouseSimulator {
   private void createNode(int temperature, int humidity, int windows, int fans, int heaters) {
     SensorActuatorNode node = DeviceFactory.createNode(
         temperature, humidity, windows, fans, heaters);
-    nodes.put(node.getId(), node);
+    logic.addNode(node.getId(), node);
   }
 
   /**
@@ -64,20 +65,18 @@ public class GreenhouseSimulator {
    * @throws NoSuchAlgorithmException
    * @throws KeyStoreException
    * @throws KeyManagementException
+   * @throws UnrecoverableKeyException
    */
-  public void start() throws KeyManagementException, KeyStoreException, NoSuchAlgorithmException, CertificateException {
+  public void start() throws KeyManagementException, KeyStoreException, NoSuchAlgorithmException, CertificateException, UnrecoverableKeyException {
     initiateCommunication();
-    for (SensorActuatorNode node : nodes.values()) {
-      node.start();
-    }
+    logic.start();
     for (PeriodicSwitch periodicSwitch : periodicSwitches) {
       periodicSwitch.start();
     }
-
     Logger.info("Simulator started");
   }
 
-  private void initiateCommunication() throws KeyManagementException, KeyStoreException, NoSuchAlgorithmException, CertificateException {
+  private void initiateCommunication() throws KeyManagementException, KeyStoreException, NoSuchAlgorithmException, CertificateException, UnrecoverableKeyException {
     if (fake) {
       initiateFakePeriodicSwitches();
     } else {
@@ -85,21 +84,48 @@ public class GreenhouseSimulator {
     }
   }
 
-  private void initiateRealCommunication() throws KeyStoreException, KeyManagementException, NoSuchAlgorithmException, CertificateException {
-    try {
-      SslConnection con = new SslConnection(PORT_NUMBER);
-      this.socket = con.client("localhost");
-      socketWriter = new PrintWriter(this.socket.getOutputStream(), true);
-      socketReader = new BufferedReader(new InputStreamReader(this.socket.getInputStream()));
+  private void initiateRealCommunication() {
+    new Thread(() -> {
+      try {
+        SslConnection con = new SslConnection(PORT_NUMBER);
+        this.server = con.server();
+        Logger.info("Listening to port: " + this.server.getLocalPort());
+        if (this.server != null) {
+          this.isServerRunning = true;
+          while (this.isServerRunning) {
+            ClientHandler handler = acceptNextClientConnection(server);
+            if (handler != null) {
+              connectedClients.add(handler);
+              logic.setClientHandlers(connectedClients);
+              handler.start();
+            }
+            System.out.println("Hello");
+          }
+        }
+  
+      } catch (IOException | KeyStoreException | UnrecoverableKeyException | KeyManagementException | NoSuchAlgorithmException | CertificateException e) {
+        System.err.println("Could open server: " + e.getMessage());
+      }
+    }).start();
+    
+  }
 
-    } catch (IOException e) {
-      System.err.println("Could not connect to server: " + e.getMessage());
+  private ClientHandler acceptNextClientConnection(SSLServerSocket listeningSocket) {
+    ClientHandler client = null;
+    try {
+      Socket clientSocket = listeningSocket.accept();
+      Logger.info("New client connected from: " + clientSocket.getRemoteSocketAddress());
+      client = new ClientHandler(clientSocket, this);
+      return client;
+    } catch (Exception e) {
+      System.err.println("Could not accept client connection: " + e.getMessage());
+      return null;
     }
   }
 
   private void initiateFakePeriodicSwitches() {
-    periodicSwitches.add(new PeriodicSwitch("Window DJ", nodes.get(1), 2, 20000));
-    periodicSwitches.add(new PeriodicSwitch("Heater DJ", nodes.get(2), 7, 8000));
+    periodicSwitches.add(new PeriodicSwitch("Window DJ", logic.getNode(1), 2, 20000));
+    periodicSwitches.add(new PeriodicSwitch("Heater DJ", logic.getNode(2), 7, 8000));
   }
 
   /**
@@ -107,9 +133,7 @@ public class GreenhouseSimulator {
    */
   public void stop() {
     stopCommunication();
-    for (SensorActuatorNode node : nodes.values()) {
-      node.stop();
-    }
+    logic.stop();
   }
 
   private void stopCommunication() {
@@ -117,13 +141,14 @@ public class GreenhouseSimulator {
       for (PeriodicSwitch periodicSwitch : periodicSwitches) {
         periodicSwitch.stop();
       }
+      Logger.info("Stopped fake");
     } else {
       try {
-        if (this.socket != null) {
-          this.socket.close();
-          this.socket = null;
-          this.socketReader = null;
-          this.socketWriter = null;
+        if (this.server != null) {
+          this.server.close();
+          this.server = null;
+          this.isServerRunning = false;
+          Logger.info("Stopping server");
         }
       } catch (IOException e) {
         System.err.println("Error closing: " + e.getMessage());
@@ -137,23 +162,20 @@ public class GreenhouseSimulator {
    * @param listener The listener which will receive notifications
    */
   public void subscribeToLifecycleUpdates(NodeStateListener listener) {
-    for (SensorActuatorNode node : nodes.values()) {
-      node.addStateListener(listener);
+    logic.subscribeToLifecycleUpdates(listener);
+  }
+
+  public ServerLogic getLogic() {
+    return this.logic;
+  }
+
+  public void sendResponseToClients(Message response) {
+    for (ClientHandler c : connectedClients) {
+      c.sendToClient(response);
     }
   }
 
-  public boolean sendMessage(Message message) {
-    boolean sent = false;
-
-    if (socketWriter != null && socketReader != null) {
-      try {
-        socketWriter.println(MessageSerializer.toString(message));
-        sent = true;
-      } catch (Exception e) {
-        System.err.println("Could not send message: " + e.getMessage());
-      }
-    }
-
-    return sent;
+  public void clientDisconnected(ClientHandler clientHandler) {
+    connectedClients.remove(clientHandler);
   }
 }

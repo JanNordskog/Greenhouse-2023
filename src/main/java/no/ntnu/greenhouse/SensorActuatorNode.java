@@ -9,6 +9,7 @@ import no.ntnu.listeners.common.ActuatorListener;
 import no.ntnu.listeners.common.CommunicationChannelListener;
 import no.ntnu.listeners.greenhouse.NodeStateListener;
 import no.ntnu.listeners.greenhouse.SensorListener;
+import no.ntnu.server.ServerLogic;
 import no.ntnu.tools.Logger;
 
 /**
@@ -124,7 +125,7 @@ public class SensorActuatorNode implements ActuatorListener, CommunicationChanne
   /**
    * Start simulating the sensor node's operation.
    */
-  public void start() {
+  public void start(ServerLogic logic) {
     if (!running) {
       startPeriodicSensorReading();
       running = true;
