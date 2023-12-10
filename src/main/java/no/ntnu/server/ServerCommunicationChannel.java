@@ -51,24 +51,26 @@ public class ServerCommunicationChannel implements CommunicationChannel {
   }
 
   private void listen() {
-    Message msg = null;
-    if (this.logic != null) {
-      do {
-        try {
-          if (reader != null) {
-            String rawMessage = reader.readLine();
-            msg = MessageSerializer.fromString(rawMessage);
-            Logger.info(rawMessage);
-            handleIncomingMessage(msg, nodes);
-          } else {
-            msg = null;
+    while (!Thread.currentThread().isInterrupted()) {
+      try {
+        if (reader != null) {
+          String rawMessage = reader.readLine();
+          if (rawMessage == null) {
+            break; // Exit loop if end of stream is reached
           }
-        } catch (IOException e) {
-          System.err.println("Error while recieving message " + e.getMessage());
+          Message msg = MessageSerializer.fromString(rawMessage);
+          Logger.info("Received message: " + rawMessage);
+          handleIncomingMessage(msg, nodes);
+        } else {
+          Logger.error("Reader is null");
+          break;
         }
-      } while (msg == null);
-    } else {
-      Logger.info("Logic is null");
+      } catch (IOException e) {
+        Logger.error("Error while receiving message: " + e.getMessage());
+        break; // Exit loop on IOException
+      } catch (Exception e) {
+        Logger.error("Error processing message: " + e.getMessage());
+      }
     }
   }
 
@@ -85,8 +87,8 @@ public class ServerCommunicationChannel implements CommunicationChannel {
       int amountOfActuators = nodeData.getActuators().size();
       if (!nodeExist) {
         nodes.add(node);
+        int i = 1;
         for (Actuator a : nodeData.getActuators()) {
-          int i = 1;
           if (i < amountOfActuators) {
             actuatorString += a.getId() + "_" + a.getType() + ",";
           } else {
@@ -95,6 +97,7 @@ public class ServerCommunicationChannel implements CommunicationChannel {
           i++;
         }
         Logger.info("Spawning node: " + actuatorString);
+        //Spawning node: 2;3_fan,4_fan,5_heater,
         spawnNode(actuatorString, 0);
 
       } else {
@@ -195,7 +198,7 @@ public class ServerCommunicationChannel implements CommunicationChannel {
   }
 
   private void parseActuator(String actuatorSpecification, SensorActuatorNodeInfo info) {
-    String[] parts = actuatorSpecification.split(" ");
+    String[] parts = actuatorSpecification.split(",");
     for (String part : parts) {
       parseActuatorInfo(part, info);
     }
@@ -209,7 +212,6 @@ public class ServerCommunicationChannel implements CommunicationChannel {
     int actuatorCount =
         Parser.parseIntegerOrError(actuatorInfo[0], "Invalid actuator count: " + actuatorInfo[0]);
     String actuatorType = actuatorInfo[1];
-
     for (int i = 0; i < actuatorCount; i++) {
       Actuator actuator = new Actuator(actuatorType, info.getId());
       actuator.setListener(logic);
