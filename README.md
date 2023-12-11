@@ -33,14 +33,14 @@ In summary, this greenhouse application represents a sophisticated system for en
 
 ## Running the application
 
-To run our game engine, run the following command:
+To run our application, run the following command:
 
     mvn clean package javafx:run
 
 If this doesn't work you have to run GreenhouseGuiStarter first and then run controlpanelstarter
 
 ## Installing
-To install the `.jar` file that can be used for running our game engine, run the following command:
+To install the `.jar` file that can be used for running our application, run the following command:
 
     mvn clean install
 
