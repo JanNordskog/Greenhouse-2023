@@ -3,8 +3,8 @@
 ## Terminology
 - **Sensor**: A device that measures environmental parameters (e.g., temperature, humidity) and produces an integer value.
 - **Actuator**: A device that can affect the environment (e.g., fan, window opener/closer).
-- **Sensor and Actuator Node**: A computer with direct access to sensors and actuators, connected to the Internet.
-- **Control-Panel Node**: An Internet-connected device that visualizes sensor/actuator node status and sends control commands.
+- **Sensor and Actuator Node**: A computer with direct access to sensors and actuators, connected to a network.
+- **Control-Panel Node**: An Network-connected device that visualizes sensor/actuator node status and sends control commands.
 - **Graphical User Interface (GUI)**: A graphical interface for system interaction.
 
 ## Underlying Transport Protocol
@@ -13,8 +13,7 @@
 - **Reason for Choice**: TCP is chosen for its reliable, connection-oriented nature, which is crucial for consistent communication in a distributed control system.
 
 ## Architecture
-- **Network Structure**: The network consists of a central server (control-panel node) and multiple client nodes (sensor/actuator nodes).
-- **Diagram**: Include a network diagram here showing the server and client nodes.
+- **Network Structure**: The network consists multiple client nodes (sensor/actuator nodes) that establishes a central server (control-panel node) which clients can connect to.
 
 ## Flow of Information and Events
 - **Sensor/Actuator Nodes**: Periodically send sensor readings to the server and receive actuator commands. React to incoming packets by updating actuator states.
@@ -41,7 +40,6 @@
 - **Data Broadcasting**: After 5 seconds, sensor nodes send their first sensor data to the server.
 - **Control Commands**:
     - Can turn on and off actuators trough client user-interface
-    - Control panel 2 sends a command to turn off all actuators.
 - **Responses**: Nodes respond to commands by updating actuator states and acknowledging the reception of commands.
 
 ## Reliability and Security
