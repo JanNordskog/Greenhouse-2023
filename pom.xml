@@ -19,7 +19,7 @@
         <maven.jar.plugin.version>3.3.0</maven.jar.plugin.version>
         <maven.javadoc.plugin.version>3.4.1</maven.javadoc.plugin.version>
         <javafx.version>19</javafx.version>
-        <application.main>no/ntnu/run/ControlPanelStarter.java</application.main>
+        <application.main>no.ntnu.run.GreenhouseGuiStarter</application.main>
         <application.filename>Greenhouse-2023</application.filename>
     </properties>
 
