@@ -5,7 +5,7 @@ A greenhouse is a structure with walls and a roof made chiefly of transparent ma
 # Purpose of the Greenhouse Application
 
 ## Monitoring and Control
-The application allows for real-time monitoring and control of various actuators and sensors within the greenhouse. Actuators include systems for adjusting temperature, humidity, light, and water supply, while sensors measure these environmental conditions.
+The application allows for real-time monitoring and control of various actuators and sensors within the greenhouse. Actuators include systems for adjusting temperature and humidity, while sensors measure these environmental conditions.
 
 ## Data Handling and Communication
 It involves a communication channel for transmitting sensor data from the greenhouse to the control system and sending commands back to the greenhouse actuators.
