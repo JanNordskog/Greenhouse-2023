@@ -85,7 +85,7 @@ public class ControlPanelStarter {
     logic.setCommunicationChannel(channel);
     channel.setNodes(nodes);
     sendCommand(new RequestDataCommand());
-    this.requestNodeDataSchedule(2000);
+    this.requestNodeDataSchedule(5000);
     ControlPanelApplication.startApp(logic, channel);
     Logger.info("Exiting the control panel application");
     stopCommunication();
