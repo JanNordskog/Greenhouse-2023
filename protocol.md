@@ -30,17 +30,17 @@
 ## Message Format
 - **General Format**: Each message contains a header (type of message, node ID) and a body (sensor data or actuator command).
 - **Specific Messages**:
-    - Sensor Data Message: `{ Type: 'SensorData', NodeID: [ID], Data: [{SensorType: 'Temperature', Value: [Value]}, {...}] }`
-    - Actuator Command Message: `{ Type: 'ActuatorCommand', NodeID: [ID], ActuatorID: [ID], Command: 'On/Off' }`
+    - Sensor Data Message: `2;temperature=28.03`
+    - Actuator Command Message: `2;5_fan`
 
 ## Error Messages
 - **Error Handling**: Error messages indicate connection issues or invalid commands, structured as `{ Type: 'Error', Message: '[Description]' }`.
 
 ## Example Scenario
-- **Startup**: Sensor nodes 1, 2, and 3 start and establish a TCP connection to the server. Two control panel nodes also connect to the server.
+- **Startup**: Sensor nodes 1, 2, and 3 start and establish a TCP server.
 - **Data Broadcasting**: After 5 seconds, sensor nodes send their first sensor data to the server.
 - **Control Commands**:
-    - User on control panel 1 turns on the fan of node 2.
+    - Can turn on and off actuators trough client user-interface
     - Control panel 2 sends a command to turn off all actuators.
 - **Responses**: Nodes respond to commands by updating actuator states and acknowledging the reception of commands.
 
