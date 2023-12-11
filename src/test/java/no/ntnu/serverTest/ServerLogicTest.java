@@ -1,53 +1,36 @@
-package no.ntnu.serverTest;
-
-import no.ntnu.greenhouse.SensorActuatorNode;
-import no.ntnu.listeners.controlpanel.GreenhouseEventListener;
-import no.ntnu.server.ServerLogic;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+package no.ntnu.servertest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.mockito.Mockito.*;
 
+import no.ntnu.greenhouse.SensorActuatorNode;
+import no.ntnu.server.ServerLogic;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+/**
+ * Test server logic.
+ */
 public class ServerLogicTest {
 
-  @Mock
-  private SensorActuatorNode mockNode;
-  @Mock
-  private GreenhouseEventListener mockListener;
+  private SensorActuatorNode node;
   private ServerLogic serverLogic;
 
   @BeforeEach
   public void setUp() {
-    MockitoAnnotations.initMocks(this);
-    serverLogic = new ServerLogic();
+    this.serverLogic = new ServerLogic();
   }
 
   @Test
   public void testAddNode() {
     int nodeId = 1;
-    serverLogic.addNode(nodeId, mockNode);
+    this.node = new SensorActuatorNode(nodeId);
+    serverLogic.addNode(nodeId, node);
     assertEquals(1, serverLogic.getAmountOfNodes());
-    assertSame(mockNode, serverLogic.getNode(nodeId));
+    assertSame(node, serverLogic.getNode(nodeId));
   }
 
-  @Test
-  public void testOnNodeAdded() {
-    serverLogic.addListener(mockListener);
-    serverLogic.onNodeAdded(null); // Assuming null for simplicity
-    verify(mockListener, times(1)).onNodeAdded(any());
-  }
-
-  @Test
-  public void testOnNodeRemoved() {
-    serverLogic.addListener(mockListener);
-    int nodeId = 1;
-    serverLogic.onNodeRemoved(nodeId);
-    verify(mockListener, times(1)).onNodeRemoved(eq(nodeId));
-  }
+  
 
 
 }

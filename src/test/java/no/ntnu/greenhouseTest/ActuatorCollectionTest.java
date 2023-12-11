@@ -1,9 +1,15 @@
-package no.ntnu.greenhouse;
+package no.ntnu.greenhousetest;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import no.ntnu.greenhouse.Actuator;
+import no.ntnu.greenhouse.ActuatorCollection;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Actuator collection test.
+ */
 public class ActuatorCollectionTest {
   private ActuatorCollection collection;
 

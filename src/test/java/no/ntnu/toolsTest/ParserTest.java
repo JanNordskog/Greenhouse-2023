@@ -1,4 +1,4 @@
-package no.ntnu.toolsTest;
+package no.ntnu.toolstest;
 
 
 import no.ntnu.tools.Parser;

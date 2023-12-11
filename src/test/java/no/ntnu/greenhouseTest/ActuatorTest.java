@@ -1,13 +1,14 @@
-package no.ntnu.greenhouseTest;
+package no.ntnu.greenhousetest;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import no.ntnu.greenhouse.Actuator;
-import no.ntnu.greenhouse.Sensor;
-import no.ntnu.greenhouse.SensorActuatorNode;
-import no.ntnu.listeners.common.ActuatorListener;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Test for actuators.
+ */
 public class ActuatorTest {
   private Actuator actuator;
 
@@ -15,10 +16,6 @@ public class ActuatorTest {
   void setUp() {
     actuator = new Actuator("type 1", 1);
   }
-
-
-
-
 
   @Test
   void testToggle() {

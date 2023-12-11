@@ -1,15 +1,25 @@
-package no.ntnu.greenhouse;
+package no.ntnu.greenhousetest;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
+import no.ntnu.greenhouse.Actuator;
+import no.ntnu.greenhouse.DeviceFactory;
+import no.ntnu.greenhouse.Sensor;
+import no.ntnu.greenhouse.SensorActuatorNode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Test for device factory.
+ */
 public class DeviceFactoryTest {
   private SensorActuatorNode node;
 
   @BeforeEach
   void setUp() {
-    node = DeviceFactory.createNode(2, 1, 3, 2, 1); // Example: 2 temperature sensors, 1 humidity sensor, 3 windows, 2 fans, 1 heater
+    node = DeviceFactory.createNode(2, 1,
+        3, 2, 1);
   }
 
   @Test

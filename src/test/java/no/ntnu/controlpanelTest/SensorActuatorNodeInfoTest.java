@@ -1,6 +1,7 @@
-package no.ntnu.controlpanel;
+package no.ntnu.controlpaneltest;
 
-import no.ntnu.greenhouse.Actuator; // Import statement for Actuator class
+import no.ntnu.controlpanel.SensorActuatorNodeInfo;
+import no.ntnu.greenhouse.Actuator;
 
 public class SensorActuatorNodeInfoTest {
 
