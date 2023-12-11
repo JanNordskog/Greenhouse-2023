@@ -87,7 +87,6 @@ public class ControlPanelStarter {
     sendCommand(new RequestDataCommand());
     this.requestNodeDataSchedule(2000);
     ControlPanelApplication.startApp(logic, channel);
-    // This code is reached only after the GUI-window is closed
     Logger.info("Exiting the control panel application");
     stopCommunication();
   }
