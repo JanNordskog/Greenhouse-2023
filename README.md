@@ -5,10 +5,10 @@ A greenhouse is a structure with walls and a roof made chiefly of transparent ma
 # Purpose of the Greenhouse Application
 
 ## Monitoring and Control
-The application allows for real-time monitoring and control of various actuators and sensors within the greenhouse. Actuators might include systems for adjusting temperature, humidity, light, and water supply, while sensors could measure these environmental conditions.
+The application allows for real-time monitoring and control of various actuators and sensors within the greenhouse. Actuators include systems for adjusting temperature, humidity, light, and water supply, while sensors measure these environmental conditions.
 
 ## Data Handling and Communication
-It involves a communication channel (likely a network or internet connection) for transmitting sensor data from the greenhouse to the control system and sending commands back to the greenhouse actuators.
+It involves a communication channel for transmitting sensor data from the greenhouse to the control system and sending commands back to the greenhouse actuators.
 
 ## Event Notification
 The system notifies users of changes in the greenhouse environment, such as when new sensor data is received or when an actuator's state changes. This is crucial for timely interventions to maintain optimal conditions.
@@ -37,7 +37,7 @@ To run our game engine, run the following command:
 
     mvn clean package javafx:run
 
-If this doesn't work you have to run our server class first and then run controlpanelstarter
+If this doesn't work you have to run GreenhouseGuiStarter first and then run controlpanelstarter
 
 ## Installing
 To install the `.jar` file that can be used for running our game engine, run the following command:
