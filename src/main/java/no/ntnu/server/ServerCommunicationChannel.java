@@ -108,7 +108,6 @@ public class ServerCommunicationChannel implements CommunicationChannel {
           i++;
         }
         Logger.info("Spawning node: " + actuatorString);
-        //Spawning node: 2;3_fan,4_fan,5_heater,
         spawnNode(actuatorString, 0);
 
       } else {

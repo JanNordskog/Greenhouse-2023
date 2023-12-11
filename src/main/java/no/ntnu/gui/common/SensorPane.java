@@ -8,14 +8,13 @@ import java.util.LinkedList;
 import java.util.List;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
-import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.TitledPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.VBox;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import no.ntnu.greenhouse.Sensor;
 import no.ntnu.greenhouse.SensorReading;
 import no.ntnu.tools.Logger;
@@ -26,7 +25,6 @@ import no.ntnu.tools.Logger;
 public class SensorPane extends TitledPane {
   private final List<SimpleStringProperty> sensorProps = new ArrayList<>();
   private final VBox contentBox = new VBox();
-  private final HBox side = new HBox();
 
   /**
    * Create a sensor pane.
@@ -86,7 +84,6 @@ public class SensorPane extends TitledPane {
   }
 
   private Node createAndRememberSensorLabel(SensorReading sensor) {
-    // Create the label for the sensor reading
     SimpleStringProperty props = new SimpleStringProperty(generateSensorText(sensor));
     sensorProps.add(props);
     Label label = new Label();
@@ -102,13 +99,12 @@ public class SensorPane extends TitledPane {
       imageView = createtemperatureIcon();
 
 
-    }else {
+    } else {
       imageView = createImageView();
     }
 
-    // Create an HBox to hold both the label and the image
     HBox hbox = new HBox(imageView, label);
-    hbox.setSpacing(5); // Set some spacing between the image and the label
+    hbox.setSpacing(5);
 
     return hbox;
   }
@@ -116,13 +112,12 @@ public class SensorPane extends TitledPane {
   private ImageView createhumidityIcon() {
     ImageView imageView = new ImageView();
     try {
-      InputStream fileContent = new FileInputStream("images/water.png"); // Replace with your image path
+      InputStream fileContent = new FileInputStream("images/water.png");
       imageView.setImage(new Image(fileContent));
-      imageView.setFitWidth(10); // Set the width of the image
+      imageView.setFitWidth(10);
       imageView.setPreserveRatio(true);
     } catch (FileNotFoundException e) {
-      // Handle the case where the image file is not found
-      imageView.setImage(new Image("images/white.jpg")); // Optional: Set a default image
+      imageView.setImage(new Image("images/white.jpg"));
     }
     return imageView;
   }
@@ -130,13 +125,12 @@ public class SensorPane extends TitledPane {
   private ImageView createtemperatureIcon() {
     ImageView imageView = new ImageView();
     try {
-      InputStream fileContent = new FileInputStream("images/temp.png"); // Replace with your image path
+      InputStream fileContent = new FileInputStream("images/temp.png");
       imageView.setImage(new Image(fileContent));
-      imageView.setFitWidth(10); // Set the width of the image
+      imageView.setFitWidth(10);
       imageView.setPreserveRatio(true);
     } catch (FileNotFoundException e) {
-      // Handle the case where the image file is not found
-      imageView.setImage(new Image("images/white.jpg")); // Optional: Set a default image
+      imageView.setImage(new Image("images/white.jpg"));
     }
     return imageView;
   }
@@ -144,13 +138,12 @@ public class SensorPane extends TitledPane {
   private ImageView createImageView() {
     ImageView imageView = new ImageView();
     try {
-      InputStream fileContent = new FileInputStream("images/white.jpg"); // Replace with your image path
+      InputStream fileContent = new FileInputStream("images/white.jpg");
       imageView.setImage(new Image(fileContent));
-      imageView.setFitWidth(10); // Set the width of the image
+      imageView.setFitWidth(10);
       imageView.setPreserveRatio(true);
     } catch (FileNotFoundException e) {
-      // Handle the case where the image file is not found
-      imageView.setImage(new Image("images/white.jpg")); // Optional: Set a default image
+      imageView.setImage(new Image("images/white.jpg"));
     }
     return imageView;
   }

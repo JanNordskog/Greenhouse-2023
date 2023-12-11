@@ -84,8 +84,6 @@ public class Actuator {
    */
   public Actuator createClone() {
     Actuator a = new Actuator(type, nodeId);
-    // Note - we pass a reference to the same map! This should not be problem, as long as we
-    // don't modify the impacts AFTER creating the template
     a.impacts = impacts;
     return a;
   }
